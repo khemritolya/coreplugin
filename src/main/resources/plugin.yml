@@ -1,0 +1,5 @@
+name: coreplugin
+version: '${version}'
+
+main: org.coreplugin.Coreplugin
+load: STARTUP

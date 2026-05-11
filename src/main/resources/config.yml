@@ -1,1 +1,68 @@
-welcome-message: "Welcome to the server, {player}!"
+welcome-message: "Welcome to , {player}!"
+
+world-gen:
+  min-height: 40
+  max-height: 80
+  noise:
+    octaves: 3
+    frequency: 0.0025
+    lacunarity: 2.0
+    persistence: 0.5
+    warp-strength: 32.0
+
+  rocks:
+    cell-size: 200
+    radius: 30
+    shell-thickness: 8
+    spawn-chance: 0.5
+    deform-strength: 4.0
+    deform-scale: 0.08
+    embed-factor: 0.2
+
+    type-chances:
+      oasis: 0.90
+      ore-cave: 0.10
+      # village gets the remainder
+
+    oasis:
+      pool-radius: 0.40
+      pool-depth: 3
+      glowstone-density: 0.05
+      ceiling-glowstone-chance: 0.05
+      min-trees: 4
+      max-trees: 7
+      tree-spread: 0.75
+      slope-rise: 10
+      dirt-layers: 1
+      floor-noise-scale: 0.15
+      floor-noise-amplitude: 2
+      pond-boundary-amplitude: 1
+      clay-radius: 0.5
+      decoration-density: 0.6
+      decoration-weights:
+        tall-grass: 0.40
+        fern: 0.10
+        dandelion: 0.12
+        poppy: 0.10
+        blue-orchid: 0.08
+        allium: 0.08
+        azure-bluet: 0.07
+        oxeye-daisy: 0.05
+
+    ore-cave:
+      ore-weights:
+        coal: 0.30
+        iron: 0.25
+        redstone: 0.15
+        gold: 0.10
+        lapis: 0.10
+        diamond: 0.05
+        emerald: 0.05
+      densities:
+        coal: 0.25
+        iron: 0.20
+        redstone: 0.18
+        gold: 0.15
+        lapis: 0.12
+        diamond: 0.10
+        emerald: 0.08

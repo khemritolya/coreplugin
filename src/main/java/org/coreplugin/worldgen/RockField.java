@@ -70,6 +70,19 @@ public class RockField {
         return result;
     }
 
+    public RockSpec findNearestOasis(int maxCellRadius) {
+        for (int r = 0; r <= maxCellRadius; r++) {
+            for (int cx = -r; cx <= r; cx++) {
+                for (int cz = -r; cz <= r; cz++) {
+                    if (Math.abs(cx) != r && Math.abs(cz) != r) continue; // ring boundary only
+                    RockSpec rock = getRockInCell(cx, cz);
+                    if (rock != null && rock.type == FormationType.OASIS) return rock;
+                }
+            }
+        }
+        return null;
+    }
+
     private RockSpec getRockInCell(int cellX, int cellZ) {
         long hash = seed
             ^ (long) cellX * 0x9E3779B97F4A7C15L

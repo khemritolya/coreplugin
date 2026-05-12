@@ -1,10 +1,17 @@
 package org.coreplugin;
 
+import org.bukkit.World;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.coreplugin.worldgen.DesertWorldGenerator;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public final class Coreplugin extends JavaPlugin {
+
+    private DesertWorldGenerator generator;
+    private final Set<String> generatorWorldNames = new HashSet<>();
 
     @Override
     public void onLoad() {
@@ -14,10 +21,35 @@ public final class Coreplugin extends JavaPlugin {
     @Override
     public void onEnable() {
         getServer().getPluginManager().registerEvents(new JoinListener(this), this);
+
+        // Main world is already loaded before onEnable on CraftBukkit 1.8;
+        // set spawn now for any matching world that is already up.
+        for (World world : getServer().getWorlds()) {
+            if (generatorWorldNames.contains(world.getName())) {
+                applyOasisSpawn(world);
+            }
+        }
     }
 
     @Override
     public ChunkGenerator getDefaultWorldGenerator(String worldName, String id) {
-        return new DesertWorldGenerator(this);
+        if (generator == null) {
+            generator = new DesertWorldGenerator(this);
+        }
+        generatorWorldNames.add(worldName);
+        return generator;
+    }
+
+    public void applyOasisSpawn(World world) {
+        if (generator == null) return;
+        int[] pos = generator.findOasisSpawn(world.getSeed());
+        if (pos == null) return;
+        world.setSpawnLocation(pos[0], pos[1], pos[2]);
+        getLogger().info("Spawn set inside oasis at " + pos[0] + ", " + pos[1] + ", " + pos[2]
+                         + " in world '" + world.getName() + "'");
+    }
+
+    public boolean isGeneratorWorld(String worldName) {
+        return generatorWorldNames.contains(worldName);
     }
 }

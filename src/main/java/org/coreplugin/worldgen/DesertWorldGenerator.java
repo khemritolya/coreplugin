@@ -1,9 +1,7 @@
 package org.coreplugin.worldgen;
 
 import org.bukkit.Chunk;
-import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.TreeType;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.configuration.ConfigurationSection;
@@ -40,9 +38,9 @@ public class DesertWorldGenerator extends ChunkGenerator {
     private final int    oasisPoolDepth;
     private final double oasisGlowstoneDensity;
     private final double oasisCeilingGlowstoneChance;
-    private final int    oasisMinTrees;
-    private final int    oasisMaxTrees;
-    private final double oasisTreeSpread;
+    private final double oasisCeilingVineChance;
+    private final int    oasisVineMinLength;
+    private final int    oasisVineMaxLength;
     private final int    oasisSlopeRise;
     private final int    oasisDirtLayers;
     private final double oasisFloorNoiseScale;
@@ -54,10 +52,10 @@ public class DesertWorldGenerator extends ChunkGenerator {
 
     private static final String[] DECORATION_KEYS = {
         "tall-grass", "fern", "dandelion", "poppy",
-        "blue-orchid", "allium", "azure-bluet", "oxeye-daisy"
+        "blue-orchid", "allium", "azure-bluet", "oxeye-daisy", "jungle-sapling"
     };
     private static final double[] DECORATION_DEFAULTS = {
-        0.40, 0.10, 0.12, 0.10, 0.08, 0.08, 0.07, 0.05
+        0.35, 0.09, 0.11, 0.09, 0.07, 0.07, 0.06, 0.04, 0.12
     };
     private static final MaterialData[] DECORATION_TYPES = {
         new MaterialData(Material.LONG_GRASS,    (byte) 1),
@@ -68,6 +66,20 @@ public class DesertWorldGenerator extends ChunkGenerator {
         new MaterialData(Material.RED_ROSE,      (byte) 2),
         new MaterialData(Material.RED_ROSE,      (byte) 3),
         new MaterialData(Material.RED_ROSE,      (byte) 8),
+        new MaterialData(Material.SAPLING,       (byte) 3),
+    };
+
+    // Shell clay type
+    private final double[] shellClayThresholds;
+
+    private static final String[]       SHELL_CLAY_KEYS     = { "regular", "red", "orange", "pink", "black" };
+    private static final double[]       SHELL_CLAY_DEFAULTS = {     0.50,   0.25,    0.15,   0.07,   0.03  };
+    private static final MaterialData[] SHELL_CLAY_TYPES    = {
+        new MaterialData(Material.HARD_CLAY,    (byte)  0),
+        new MaterialData(Material.STAINED_CLAY, (byte) 14),
+        new MaterialData(Material.STAINED_CLAY, (byte)  1),
+        new MaterialData(Material.STAINED_CLAY, (byte)  6),
+        new MaterialData(Material.STAINED_CLAY, (byte) 15),
     };
 
     // Ore cave interior
@@ -121,9 +133,9 @@ public class DesertWorldGenerator extends ChunkGenerator {
         oasisPoolDepth             = oasisCfg.getInt("pool-depth",                3);
         oasisGlowstoneDensity          = oasisCfg.getDouble("glowstone-density",           0.05);
         oasisCeilingGlowstoneChance    = oasisCfg.getDouble("ceiling-glowstone-chance",    0.05);
-        oasisMinTrees              = oasisCfg.getInt("min-trees",                 2);
-        oasisMaxTrees              = oasisCfg.getInt("max-trees",                 3);
-        oasisTreeSpread            = oasisCfg.getDouble("tree-spread",            0.75);
+        oasisCeilingVineChance         = oasisCfg.getDouble("ceiling-vine-chance",         0.08);
+        oasisVineMinLength             = oasisCfg.getInt("vine-min-length",                2);
+        oasisVineMaxLength             = oasisCfg.getInt("vine-max-length",                7);
         oasisSlopeRise             = oasisCfg.getInt("slope-rise",               10);
         oasisDirtLayers            = oasisCfg.getInt("dirt-layers",              1);
         oasisFloorNoiseScale          = oasisCfg.getDouble("floor-noise-scale",       0.15);
@@ -148,6 +160,23 @@ public class DesertWorldGenerator extends ChunkGenerator {
         }
         oasisDecorationThresholds[decoWeights.length - 1] = 1.0;
 
+        ConfigurationSection shellClayCfg = rockCfg.getConfigurationSection("shell-clay-weights");
+        double[] shellClayWeights = new double[SHELL_CLAY_KEYS.length];
+        for (int i = 0; i < SHELL_CLAY_KEYS.length; i++) {
+            shellClayWeights[i] = shellClayCfg != null
+                ? shellClayCfg.getDouble(SHELL_CLAY_KEYS[i], SHELL_CLAY_DEFAULTS[i])
+                : SHELL_CLAY_DEFAULTS[i];
+        }
+        double shellClaySum = 0;
+        for (double w : shellClayWeights) shellClaySum += w;
+        shellClayThresholds = new double[shellClayWeights.length];
+        double shellClayCum = 0;
+        for (int i = 0; i < shellClayWeights.length - 1; i++) {
+            shellClayCum += shellClayWeights[i] / shellClaySum;
+            shellClayThresholds[i] = shellClayCum;
+        }
+        shellClayThresholds[shellClayWeights.length - 1] = 1.0;
+
         ConfigurationSection oreCaveCfg = rockCfg.getConfigurationSection("ore-cave");
         ConfigurationSection densitiesCfg = oreCaveCfg.getConfigurationSection("densities");
         oreDensities = new double[]{
@@ -161,6 +190,43 @@ public class DesertWorldGenerator extends ChunkGenerator {
         };
     }
 
+    private void initIfNeeded(long seed) {
+        if (seed == cachedSeed) return;
+        cachedSeed = seed;
+        noise     = new FBMNoise(seed, octaves, frequency, lacunarity, persistence, warpStrength);
+        rockField = new RockField(seed, rockCellSize, rockRadius, rockSpawnChance, rockEmbedFactor,
+                                  rockOasisChance, rockOreCaveChance, rockOreWeights,
+                                  noise, minHeight, maxHeight);
+        rockNoise = new SimplexNoise(seed + 1);
+    }
+
+    public int[] findOasisSpawn(long seed) {
+        initIfNeeded(seed);
+        RockSpec rock = rockField.findNearestOasis(50);
+        if (rock == null) return null;
+
+        double innerRadius = rock.radius - rockShellThickness;
+        double dyC         = rock.centerY - rock.entranceY;
+        double footprintR  = Math.sqrt(Math.max(1.0, innerRadius * innerRadius - dyC * dyC));
+
+        // Pick a column 60% of the footprint radius from center — well into the grass area
+        int    wx        = rock.centerX + (int) (footprintR * 0.6);
+        int    wz        = rock.centerZ;
+        double horizDist = footprintR * 0.6;
+
+        // Mirror fillOasis floor calculation exactly so the Y is never inside a block
+        double pondBn      = rockNoise.eval(wx * oasisFloorNoiseScale + 900.0, wz * oasisFloorNoiseScale + 900.0);
+        double effPoolR    = Math.max(0.5, footprintR * oasisPoolRadius + pondBn * oasisPondBoundaryAmplitude);
+        double effSandEdge = effPoolR + oasisClayRadius;
+        double slopeRange  = Math.max(1.0, footprintR - 1.0 - effSandEdge);
+        double tSlope      = Math.min(1.0, (horizDist - effSandEdge) / slopeRange);
+        double fn          = rockNoise.eval(wx * oasisFloorNoiseScale + 500.0, wz * oasisFloorNoiseScale + 500.0);
+        int localFloorY    = Math.max(1, rock.entranceY + (int) (tSlope * tSlope * oasisSlopeRise) + (int) (fn * oasisFloorNoiseAmplitude));
+
+        // +1 clears the grass block, +1 clears any decoration placed on top of it
+        return new int[]{ wx, localFloorY + 2, wz };
+    }
+
     @Override
     public List<BlockPopulator> getDefaultPopulators(World world) {
         return Collections.singletonList(new OasisPopulator());
@@ -168,14 +234,7 @@ public class DesertWorldGenerator extends ChunkGenerator {
 
     @Override
     public ChunkData generateChunkData(World world, Random random, int chunkX, int chunkZ, BiomeGrid biome) {
-        if (world.getSeed() != cachedSeed) {
-            cachedSeed = world.getSeed();
-            noise     = new FBMNoise(cachedSeed, octaves, frequency, lacunarity, persistence, warpStrength);
-            rockField = new RockField(cachedSeed, rockCellSize, rockRadius, rockSpawnChance, rockEmbedFactor,
-                                      rockOasisChance, rockOreCaveChance, rockOreWeights,
-                                      noise, minHeight, maxHeight);
-            rockNoise = new SimplexNoise(cachedSeed + 1);
-        }
+        initIfNeeded(world.getSeed());
 
         ChunkData chunk = createChunkData(world);
         int heightRange = maxHeight - minHeight;
@@ -210,8 +269,22 @@ public class DesertWorldGenerator extends ChunkGenerator {
         return chunk;
     }
 
+    private MaterialData shellClayFor(RockSpec rock) {
+        long rockSeed = cachedSeed ^ ((long) rock.centerX * 0x9E3779B97F4A7C15L) ^ ((long) rock.centerZ * 0x6C62272E07BB0142L);
+        double roll = new Random(rockSeed ^ 0x534845_4C4C_594CL).nextDouble();
+        MaterialData result = SHELL_CLAY_TYPES[SHELL_CLAY_TYPES.length - 1];
+        for (int i = 0; i < shellClayThresholds.length - 1; i++) {
+            if (roll < shellClayThresholds[i]) {
+                result = SHELL_CLAY_TYPES[i];
+                break;
+            }
+        }
+        return result;
+    }
+
     private void placeShell(RockSpec rock, ChunkData chunk, int chunkX, int chunkZ, World world) {
         int totalMargin = (int) Math.ceil(rockDeformStrength);
+        MaterialData shellClay = shellClayFor(rock);
 
         int minX = Math.max(0,  rock.centerX - rock.radius - totalMargin - chunkX * 16);
         int maxX = Math.min(15, rock.centerX + rock.radius + totalMargin - chunkX * 16);
@@ -247,7 +320,7 @@ public class DesertWorldGenerator extends ChunkGenerator {
                         }
                         chunk.setBlock(lx, y, lz, interior);
                     } else if (dist <= effective) {
-                        chunk.setBlock(lx, y, lz, Material.HARD_CLAY);
+                        chunk.setBlock(lx, y, lz, shellClay);
                     }
                 }
             }
@@ -279,11 +352,11 @@ public class DesertWorldGenerator extends ChunkGenerator {
                 double horizDist = Math.sqrt((wx - rock.centerX) * (wx - rock.centerX)
                                            + (wz - rock.centerZ) * (wz - rock.centerZ));
 
-                if (horizDist >= innerRadius) continue;
+                if (horizDist >= innerRadius + 2) continue;
 
                 // Per-column noisy pool radius and shore edge
                 double pondBn      = rockNoise.eval(wx * oasisFloorNoiseScale + 900.0, wz * oasisFloorNoiseScale + 900.0);
-                double effPoolR    = Math.max(1.0, poolR + pondBn * oasisPondBoundaryAmplitude);
+                double effPoolR    = Math.max(0.5, poolR + pondBn * oasisPondBoundaryAmplitude);
                 double effSandEdge = effPoolR + oasisClayRadius;
 
                 if (horizDist < effPoolR) {
@@ -300,19 +373,25 @@ public class DesertWorldGenerator extends ChunkGenerator {
                     chunk.setBlock(lx, floorY, lz, Material.CLAY);
                 } else {
                     // Grass floor: slope from noisy shore edge to dome wall + noise undulation
-                    double localSlopeRange = Math.max(1.0, footprintR - effSandEdge);
+                    double localSlopeRange = Math.max(1.0, footprintR - 1.0 - effSandEdge);
                     double tSlope = Math.min(1.0, (horizDist - effSandEdge) / localSlopeRange);
                     double fn = rockNoise.eval(wx * oasisFloorNoiseScale + 500.0, wz * oasisFloorNoiseScale + 500.0);
                     int localFloorY = Math.max(1, floorY + (int)(tSlope * tSlope * oasisSlopeRise) + (int)(fn * oasisFloorNoiseAmplitude));
 
                     // Stone fill between entrance level and dirt layer
                     for (int fy = floorY; fy < localFloorY - oasisDirtLayers; fy++) {
+                        if (chunk.getType(lx, fy, lz) != Material.AIR) continue;
                         chunk.setBlock(lx, fy, lz, Material.STONE);
                     }
                     // Dirt layer (may extend below floorY when slope is shallow)
                     for (int fy = Math.max(1, localFloorY - oasisDirtLayers); fy < localFloorY; fy++) {
+                        if (chunk.getType(lx, fy, lz) != Material.AIR) continue;
                         chunk.setBlock(lx, fy, lz, Material.DIRT);
                     }
+
+
+                    if (chunk.getType(lx, localFloorY, lz) != Material.AIR &&
+                            chunk.getType(lx, localFloorY, lz) != Material.STONE) continue;
                     chunk.setBlock(lx, localFloorY, lz, Material.GRASS);
 
                     // Per-block seeded decorations (independent of chunk bounds)
@@ -378,52 +457,6 @@ public class DesertWorldGenerator extends ChunkGenerator {
         if (oreType == Material.LAPIS_ORE)    return oreDensities[4];
         if (oreType == Material.DIAMOND_ORE)  return oreDensities[5];
         return oreDensities[6];
-    }
-
-    private void placeTrees(RockSpec rock, World world, int chunkX, int chunkZ) {
-        long rockSeed = cachedSeed ^ ((long) rock.centerX * 0x9E3779B97F4A7C15L) ^ ((long) rock.centerZ * 0x6C62272E07BB0142L);
-        Random rng = new Random(rockSeed);
-
-        double innerRadius = rock.radius - rockShellThickness;
-        int    floorY      = rock.entranceY;
-
-        double dyC        = rock.centerY - rock.entranceY;
-        double footprintR = Math.sqrt(Math.max(0, innerRadius * innerRadius - dyC * dyC));
-        double poolR      = footprintR * oasisPoolRadius;
-
-        double treeInnerR = poolR + 2.0;
-        double treeOuterR = footprintR * oasisTreeSpread;
-        if (treeOuterR <= treeInnerR) treeOuterR = treeInnerR + 2.0;
-
-        int treeCount = oasisMinTrees + (oasisMaxTrees > oasisMinTrees
-                        ? rng.nextInt(oasisMaxTrees - oasisMinTrees + 1) : 0);
-        for (int i = 0; i < treeCount; i++) {
-            double angle = rng.nextDouble() * Math.PI * 2;
-            double dist  = treeInnerR + rng.nextDouble() * (treeOuterR - treeInnerR);
-            int tx = rock.centerX + (int) Math.round(Math.cos(angle) * dist);
-            int tz = rock.centerZ + (int) Math.round(Math.sin(angle) * dist);
-
-            if (tx < chunkX * 16 || tx > chunkX * 16 + 15) continue;
-            if (tz < chunkZ * 16 || tz > chunkZ * 16 + 15) continue;
-
-            double horiz = Math.sqrt((tx - rock.centerX) * (tx - rock.centerX)
-                                   + (tz - rock.centerZ) * (tz - rock.centerZ));
-            if (horiz >= footprintR) continue;
-
-            double treeBn          = rockNoise.eval(tx * oasisFloorNoiseScale + 900.0, tz * oasisFloorNoiseScale + 900.0);
-            double treeEffSandEdge = Math.max(1.0, poolR + treeBn * oasisPondBoundaryAmplitude) + oasisClayRadius;
-            if (horiz < treeEffSandEdge) continue;
-            double treeSlopeRange  = Math.max(1.0, footprintR - treeEffSandEdge);
-            double tSlopeTree      = Math.min(1.0, Math.max(0, (horiz - treeEffSandEdge) / treeSlopeRange));
-            double treeFn          = rockNoise.eval(tx * oasisFloorNoiseScale + 500.0, tz * oasisFloorNoiseScale + 500.0);
-            int treeFloorY = Math.max(1, floorY + (int)(tSlopeTree * tSlopeTree * oasisSlopeRise)
-                                                 + (int)(treeFn * oasisFloorNoiseAmplitude));
-
-            int ceilY = rock.centerY + (int) Math.sqrt(Math.max(0, innerRadius * innerRadius - horiz * horiz));
-            if (treeFloorY + 11 > ceilY) continue;
-
-            world.generateTree(new Location(world, tx, treeFloorY + 1, tz), TreeType.SMALL_JUNGLE);
-        }
     }
 
     private void placeGlowstoneFlowers(RockSpec rock, World world, int chunkX, int chunkZ) {
@@ -492,10 +525,63 @@ public class DesertWorldGenerator extends ChunkGenerator {
                 for (int y = searchFrom; y >= rock.entranceY; y--) {
                     if (world.getBlockAt(wx, y, wz).getType() != Material.AIR) continue;
                     // Only place if this air block is actually inside the cave (ceiling above is shell)
-                    if (world.getBlockAt(wx, y + 1, wz).getType() == Material.HARD_CLAY) {
+                    Material above = world.getBlockAt(wx, y + 1, wz).getType();
+                    if (above == Material.HARD_CLAY || above == Material.STAINED_CLAY) {
                         world.getBlockAt(wx, y, wz).setType(Material.GLOWSTONE);
                     }
                     break;
+                }
+            }
+        }
+    }
+
+    private static final byte[] VINE_FACES = { 0x1, 0x2, 0x4, 0x8 }; // S, W, N, E
+
+    private void placeCeilingVines(RockSpec rock, World world, int chunkX, int chunkZ) {
+        long rockSeed = cachedSeed ^ ((long) rock.centerX * 0x9E3779B97F4A7C15L) ^ ((long) rock.centerZ * 0x6C62272E07BB0142L);
+
+        double innerRadius = rock.radius - rockShellThickness;
+        int ir   = (int) innerRadius + 2;
+        int minX = Math.max(chunkX * 16,      rock.centerX - ir);
+        int maxX = Math.min(chunkX * 16 + 15, rock.centerX + ir);
+        int minZ = Math.max(chunkZ * 16,      rock.centerZ - ir);
+        int maxZ = Math.min(chunkZ * 16 + 15, rock.centerZ + ir);
+
+        int lengthRange = Math.max(1, oasisVineMaxLength - oasisVineMinLength + 1);
+
+        for (int wx = minX; wx <= maxX; wx++) {
+            for (int wz = minZ; wz <= maxZ; wz++) {
+                double horizDist = Math.sqrt((wx - rock.centerX) * (wx - rock.centerX)
+                                           + (wz - rock.centerZ) * (wz - rock.centerZ));
+                if (horizDist >= innerRadius) continue;
+
+                long bSeed = rockSeed ^ ((long) wx * 0x1234ABCD5678EFL) ^ ((long) wz * 0xFEDCBA9876543210L);
+                Random rng = new Random(bSeed);
+                if (rng.nextDouble() >= oasisCeilingVineChance) continue;
+
+                // Find ceiling: scan down from top of interior to find first air under solid
+                int topY       = rock.centerY + (int) Math.sqrt(Math.max(0, innerRadius * innerRadius - horizDist * horizDist));
+                int searchFrom = Math.min(topY + rockShellThickness + 2, world.getMaxHeight() - 1);
+
+                int ceilingAirY = -1;
+                for (int y = searchFrom; y >= rock.entranceY; y--) {
+                    if (world.getBlockAt(wx, y, wz).getType() != Material.AIR) continue;
+                    Material above = world.getBlockAt(wx, y + 1, wz).getType();
+                    if (above == Material.HARD_CLAY || above == Material.STAINED_CLAY) {
+                        ceilingAirY = y;
+                    }
+                    break;
+                }
+                if (ceilingAirY < 0) continue;
+
+                byte face   = VINE_FACES[rng.nextInt(VINE_FACES.length)];
+                int  length = oasisVineMinLength + rng.nextInt(lengthRange);
+
+                for (int i = 0; i < length; i++) {
+                    int vineY = ceilingAirY - i;
+                    if (vineY < rock.entranceY) break;
+                    if (world.getBlockAt(wx, vineY, wz).getType() != Material.AIR) break;
+                    world.getBlockAt(wx, vineY, wz).setTypeIdAndData(Material.VINE.getId(), face, false);
                 }
             }
         }
@@ -509,9 +595,9 @@ public class DesertWorldGenerator extends ChunkGenerator {
             int chunkZ = chunk.getZ();
             for (RockSpec rock : rockField.getRocksNear(chunkX, chunkZ)) {
                 if (rock.type == FormationType.OASIS) {
-                    placeTrees(rock, world, chunkX, chunkZ);
                     placeGlowstoneFlowers(rock, world, chunkX, chunkZ);
                     placeCeilingGlowstone(rock, world, chunkX, chunkZ);
+                    placeCeilingVines(rock, world, chunkX, chunkZ);
                 }
             }
         }

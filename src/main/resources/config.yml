@@ -1,4 +1,4 @@
-welcome-message: "Welcome to , {player}!"
+welcome-message: "Welcome to HD 31174 c, {player}!"
 
 world-gen:
   min-height: 40
@@ -14,37 +14,45 @@ world-gen:
     cell-size: 200
     radius: 30
     shell-thickness: 8
-    spawn-chance: 0.5
+    spawn-chance: 0.99
     deform-strength: 4.0
     deform-scale: 0.08
     embed-factor: 0.2
 
+    shell-clay-weights:
+      regular: 0.75
+      red: 0.05
+      orange: 0.15
+      pink: 0.02
+      black: 0.03
+
     type-chances:
-      oasis: 0.90
-      ore-cave: 0.10
+      oasis: 0.3
+      ore-cave: 0.7
       # village gets the remainder
 
     oasis:
-      pool-radius: 0.40
+      pool-radius: 0.20
       pool-depth: 3
       glowstone-density: 0.05
-      ceiling-glowstone-chance: 0.05
-      min-trees: 4
-      max-trees: 7
-      tree-spread: 0.75
-      slope-rise: 10
+      ceiling-glowstone-chance: 0.08
+      ceiling-vine-chance: 0.08
+      vine-min-length: 2
+      vine-max-length: 7
+      slope-rise: 7
       dirt-layers: 1
-      floor-noise-scale: 0.15
+      floor-noise-scale: 0.03
       floor-noise-amplitude: 2
       pond-boundary-amplitude: 1
       clay-radius: 0.5
-      decoration-density: 0.6
+      decoration-density: 0.5
       decoration-weights:
-        tall-grass: 0.40
+        tall-grass: 0.35
         fern: 0.10
+        jungle-sapling: 0.05
         dandelion: 0.12
-        poppy: 0.10
         blue-orchid: 0.08
+        poppy: 0.10
         allium: 0.08
         azure-bluet: 0.07
         oxeye-daisy: 0.05

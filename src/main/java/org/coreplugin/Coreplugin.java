@@ -10,7 +10,7 @@ import java.util.Set;
 
 public final class Coreplugin extends JavaPlugin {
 
-    private DesertWorldGenerator generator;
+    DesertWorldGenerator generator;
     private final Set<String> generatorWorldNames = new HashSet<>();
 
     @Override
@@ -21,6 +21,10 @@ public final class Coreplugin extends JavaPlugin {
     @Override
     public void onEnable() {
         getServer().getPluginManager().registerEvents(new JoinListener(this), this);
+        getServer().getPluginManager().registerEvents(new SilverfishSpawnListener(this), this);
+        getServer().getPluginManager().registerEvents(new MobSpawnListener(), this);
+        NightMobTask.register(this);
+        DarknessListener.register(this);
 
         // Main world is already loaded before onEnable on CraftBukkit 1.8;
         // set spawn now for any matching world that is already up.
@@ -51,5 +55,9 @@ public final class Coreplugin extends JavaPlugin {
 
     public boolean isGeneratorWorld(String worldName) {
         return generatorWorldNames.contains(worldName);
+    }
+
+    public DesertWorldGenerator getGenerator() {
+        return generator;
     }
 }

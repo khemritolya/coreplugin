@@ -200,6 +200,19 @@ public class DesertWorldGenerator extends ChunkGenerator {
         rockNoise = new SimplexNoise(seed + 1);
     }
 
+    public boolean isNearAnyRock(long seed, int wx, int wz, double radiusFactor) {
+        initIfNeeded(seed);
+        if (rockField == null) return false;
+        int chunkX = Math.floorDiv(wx, 16);
+        int chunkZ = Math.floorDiv(wz, 16);
+        for (RockSpec rock : rockField.getRocksNear(chunkX, chunkZ)) {
+            double dx = wx - rock.centerX;
+            double dz = wz - rock.centerZ;
+            if (Math.sqrt(dx * dx + dz * dz) <= radiusFactor * rock.radius) return true;
+        }
+        return false;
+    }
+
     public int[] findOasisSpawn(long seed) {
         initIfNeeded(seed);
         RockSpec rock = rockField.findNearestOasis(50);

@@ -1,5 +1,29 @@
 welcome-message: "Welcome to HD 31174 c, {player}!"
 
+silverfish:
+  spawn-chance: 0.9
+  potion:
+    drop-chance: 0.9
+    duration: 400
+    level-lambda: 2.0
+
+night-mobs:
+  check-interval: 40
+  light-threshold: 7
+  spawn-radius: 48
+  rock-exclusion-factor: 2.0
+  ghast:
+    chance: 0.3
+    max-per-player: 3
+  cave-spider:
+    chance: 0.5
+    max-per-player: 5
+
+darkness:
+  threshold: 5
+  duration: 40
+  check-interval: 10
+
 world-gen:
   min-height: 40
   max-height: 80
@@ -14,7 +38,7 @@ world-gen:
     cell-size: 200
     radius: 30
     shell-thickness: 8
-    spawn-chance: 0.99
+    spawn-chance: 0.75
     deform-strength: 4.0
     deform-scale: 0.08
     embed-factor: 0.2

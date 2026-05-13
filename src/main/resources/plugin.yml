@@ -3,3 +3,8 @@ version: '${version}'
 
 main: org.coreplugin.Coreplugin
 load: STARTUP
+
+commands:
+  sandstorm:
+    description: Control sandstorms
+    usage: /sandstorm [start [seconds] | stop | status]

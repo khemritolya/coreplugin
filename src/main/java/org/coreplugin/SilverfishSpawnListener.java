@@ -27,7 +27,8 @@ import java.util.Set;
 
 public class SilverfishSpawnListener implements Listener {
 
-    private static final String TAG = "sandfish";
+    private static final String TAG = "dangerousCritter";
+    private static final String spiceName = ChatColor.RESET + "Blue Dust";
 
     private final Coreplugin plugin;
     private final double spawnChance;
@@ -78,16 +79,16 @@ public class SilverfishSpawnListener implements Listener {
         ItemStack potion = new ItemStack(Material.POTION);
         PotionMeta meta = (PotionMeta) potion.getItemMeta();
         int mark = poissonSample(lambda);
-        meta.setDisplayName(ChatColor.RESET + "" + ChatColor.MAGIC + "A" + ChatColor.RESET + " Spice " + ChatColor.MAGIC + "A");
+        meta.setDisplayName(spiceName);
 
         meta.addCustomEffect(
-            new PotionEffect(PotionEffectType.SATURATION, duration, mark, false, false), true);
+                new PotionEffect(PotionEffectType.SATURATION, duration, mark, false, false), true);
         meta.addCustomEffect(
-            new PotionEffect(PotionEffectType.REGENERATION, duration, mark, false, false), true);
+                new PotionEffect(PotionEffectType.REGENERATION, duration, mark, false, false), true);
         meta.addCustomEffect(
-            new PotionEffect(PotionEffectType.SPEED, duration, mark, false, false), true);
+                new PotionEffect(PotionEffectType.INCREASE_DAMAGE, duration, mark/2, false, false), true);
         meta.addCustomEffect(
-            new PotionEffect(PotionEffectType.NIGHT_VISION, duration, 0, false, false), true);
+                new PotionEffect(PotionEffectType.NIGHT_VISION, duration, 0, false, false), true);
 
         meta.setLore(Collections.singletonList(ChatColor.RESET + "" + ChatColor.GRAY + "Grade: " + ChatColor.GOLD + toRoman(mark + 1)));
         potion.setItemMeta(meta);
@@ -99,7 +100,7 @@ public class SilverfishSpawnListener implements Listener {
         ItemStack item = event.getItem();
         if (item.getType() != Material.POTION) return;
         ItemMeta meta = item.getItemMeta();
-        if (meta == null || !meta.getDisplayName().contains("Spice")) return;
+        if (meta == null || !meta.getDisplayName().equals(spiceName)) return;
 
         Player player = event.getPlayer();
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {

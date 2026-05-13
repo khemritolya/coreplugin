@@ -1,21 +1,21 @@
 silverfish:
-  spawn-chance: 0.9
+  spawn-chance: 0.5
   potion:
-    drop-chance: 0.9
+    drop-chance: 0.5
     duration: 4000
-    level-lambda: 2.5
+    level-lambda: 2.0
 
 night-mobs:
   check-interval: 40
   light-threshold: 7
-  spawn-radius: 48
-  rock-exclusion-factor: 2.0
+  spawn-radius: 40
+  rock-exclusion-factor: 1.5
   ghast:
     chance: 0.3
     max-per-player: 3
-  cave-spider:
-    chance: 0.5
-    max-per-player: 5
+  silverfish:
+    chance: 0.9
+    max-per-player: 7
 
 darkness:
   threshold: 5
@@ -72,7 +72,7 @@ world-gen:
         cow: 1.0
         pig: 0.5
         sheep: 1.5
-        chicken: 2.0
+        chicken: 4.0
       decoration-weights:
         tall-grass: 0.35
         fern: 0.10
@@ -101,3 +101,13 @@ world-gen:
         lapis: 0.12
         diamond: 0.10
         emerald: 0.08
+
+sandstorm:
+  duration-min: 2400
+  duration-max: 6000
+  check-interval: 20
+  mean-arrival-interval: 24000
+  warning-ticks: 1200
+  damage: 1.0
+  damage-interval: 20
+  sky-light-threshold: 5

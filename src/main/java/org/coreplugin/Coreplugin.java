@@ -12,6 +12,7 @@ public final class Coreplugin extends JavaPlugin {
 
     DesertWorldGenerator generator;
     private final Set<String> generatorWorldNames = new HashSet<>();
+    private SandstormManager sandstorm;
 
     @Override
     public void onLoad() {
@@ -22,12 +23,15 @@ public final class Coreplugin extends JavaPlugin {
     public void onEnable() {
         saveResource("welcome_book.txt", false);
         saveResource("crimes.txt", false);
+        sandstorm = SandstormManager.register(this);
         getServer().getPluginManager().registerEvents(new JoinListener(this), this);
         getServer().getPluginManager().registerEvents(new SilverfishSpawnListener(this), this);
         getServer().getPluginManager().registerEvents(new MobSpawnListener(), this);
-        getServer().getPluginManager().registerEvents(new WeatherListener(), this);
-        NightMobTask.register(this);
+        getServer().getPluginManager().registerEvents(new HostileMobListener(), this);
+        getServer().getPluginManager().registerEvents(new WeatherListener(sandstorm), this);
+        HostileMobTask.register(this, sandstorm);
         DarknessListener.register(this);
+        getCommand("sandstorm").setExecutor(new SandstormCommand(sandstorm));
 
         // Main world is already loaded before onEnable on CraftBukkit 1.8;
         // set spawn now for any matching world that is already up.
@@ -48,6 +52,8 @@ public final class Coreplugin extends JavaPlugin {
     }
 
     public void applyOasisSpawn(World world) {
+        world.setTime(6000);
+        world.setGameRuleValue("doDaylightCycle", "false");
         if (generator == null) return;
         int[] pos = generator.findOasisSpawn(world.getSeed());
         if (pos == null) return;

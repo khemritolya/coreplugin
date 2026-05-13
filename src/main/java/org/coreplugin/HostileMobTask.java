@@ -1,6 +1,5 @@
 package org.coreplugin;
 
-import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
@@ -11,34 +10,35 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.coreplugin.worldgen.DesertWorldGenerator;
 
+import java.util.List;
 import java.util.Random;
 
-public class NightMobTask extends BukkitRunnable {
+public class HostileMobTask extends BukkitRunnable {
 
-    private static final String TAG = "nightmob";
+    private static final String TAG = "dangerousCritter";
 
     private final Coreplugin plugin;
-    private final int lightThreshold;
+    private final SandstormManager sandstorm;
     private final int spawnRadius;
     private final double rockExclusionFactor;
     private final double ghastChance;
     private final int ghastMaxPerPlayer;
-    private final double spiderChance;
-    private final int spiderMaxPerPlayer;
+    private final double silverfishChance;
+    private final int silverfishMaxPerPlayer;
     private final Random rng = new Random();
 
-    private NightMobTask(Coreplugin plugin) {
+    private HostileMobTask(Coreplugin plugin, SandstormManager sandstorm) {
         this.plugin = plugin;
+        this.sandstorm = sandstorm;
         ConfigurationSection cfg = plugin.getConfig().getConfigurationSection("night-mobs");
-        lightThreshold      = cfg.getInt("light-threshold", 7);
         spawnRadius         = cfg.getInt("spawn-radius", 48);
         rockExclusionFactor = cfg.getDouble("rock-exclusion-factor", 2.0);
         ConfigurationSection ghastCfg  = cfg.getConfigurationSection("ghast");
         ghastChance         = ghastCfg.getDouble("chance", 0.3);
         ghastMaxPerPlayer   = ghastCfg.getInt("max-per-player", 2);
-        ConfigurationSection spiderCfg = cfg.getConfigurationSection("cave-spider");
-        spiderChance        = spiderCfg.getDouble("chance", 0.5);
-        spiderMaxPerPlayer  = spiderCfg.getInt("max-per-player", 3);
+        ConfigurationSection silverfishCfg = cfg.getConfigurationSection("silverfish");
+        silverfishChance       = silverfishCfg.getDouble("chance", 0.5);
+        silverfishMaxPerPlayer = silverfishCfg.getInt("max-per-player", 3);
     }
 
     @Override
@@ -48,21 +48,36 @@ public class NightMobTask extends BukkitRunnable {
         for (World world : plugin.getServer().getWorlds()) {
             if (!plugin.isGeneratorWorld(world.getName())) continue;
 
-            if (world.getTime() < 13000) {
+            if (sandstorm.isActive()) {
                 for (LivingEntity e : world.getLivingEntities()) {
                     if (e.hasMetadata(TAG)) e.remove();
                 }
                 continue;
             }
 
-            for (Player player : world.getPlayers()) {
-                if (countNearby(Ghast.class, player) < ghastMaxPerPlayer
+            List<Player> players = world.getPlayers();
+            double cullRangeSq = (spawnRadius * 3.0) * (spawnRadius * 3.0);
+            for (LivingEntity e : world.getLivingEntities()) {
+                if (!e.hasMetadata(TAG)) continue;
+                boolean inRange = false;
+                for (Player p : players) {
+                    if (e.getLocation().distanceSquared(p.getLocation()) <= cullRangeSq) {
+                        inRange = true;
+                        break;
+                    }
+                }
+                if (!inRange) e.remove();
+            }
+
+            int cap = players.size();
+            for (Player player : players) {
+                if (countTagged(Ghast.class, world) < ghastMaxPerPlayer * cap
                         && rng.nextDouble() < ghastChance) {
                     trySpawn(EntityType.GHAST, player, world, generator, true);
                 }
-                if (countNearby(CaveSpider.class, player) < spiderMaxPerPlayer
-                        && rng.nextDouble() < spiderChance) {
-                    trySpawn(EntityType.CAVE_SPIDER, player, world, generator, false);
+                if (countTagged(Silverfish.class, world) < silverfishMaxPerPlayer * cap
+                        && rng.nextDouble() < silverfishChance) {
+                    trySpawn(EntityType.SILVERFISH, player, world, generator, false);
                 }
             }
         }
@@ -83,18 +98,16 @@ public class NightMobTask extends BukkitRunnable {
             int surfaceY = world.getHighestBlockYAt(wx, wz);
             int spawnY = aerial ? surfaceY + 12 + rng.nextInt(10) : surfaceY + 1;
 
-            if (world.getBlockAt(wx, spawnY, wz).getLightLevel() > lightThreshold) continue;
-
             LivingEntity mob = (LivingEntity) world.spawnEntity(
                     new Location(world, wx + 0.5, spawnY, wz + 0.5), type);
 
-            if (mob instanceof CaveSpider) {
+            if (mob instanceof Silverfish) {
                 mob.addPotionEffect(
                         new PotionEffect(PotionEffectType.JUMP, Integer.MAX_VALUE, 1, false, false), true);
                 mob.addPotionEffect(
-                        new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, Integer.MAX_VALUE, 1, false, false), true);
+                        new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, Integer.MAX_VALUE, 3, false, false), true);
                 mob.addPotionEffect(
-                        new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 1, false, false), true);
+                        new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 2, false, false), true);
             }
 
             mob.setMetadata(TAG, new FixedMetadataValue(plugin, true));
@@ -102,20 +115,16 @@ public class NightMobTask extends BukkitRunnable {
         }
     }
 
-    private long countNearby(Class<? extends Entity> type, Player player) {
-        double rangeSq = (spawnRadius * 3.0) * (spawnRadius * 3.0);
+    private long countTagged(Class<? extends Entity> type, World world) {
         long count = 0;
-        for (LivingEntity e : player.getWorld().getLivingEntities()) {
-            if (type.isInstance(e) && e.hasMetadata(TAG)
-                    && e.getLocation().distanceSquared(player.getLocation()) < rangeSq) {
-                count++;
-            }
+        for (LivingEntity e : world.getLivingEntities()) {
+            if (type.isInstance(e) && e.hasMetadata(TAG)) count++;
         }
         return count;
     }
 
-    public static void register(Coreplugin plugin) {
+    public static void register(Coreplugin plugin, SandstormManager sandstorm) {
         long interval = plugin.getConfig().getLong("night-mobs.check-interval", 40L);
-        new NightMobTask(plugin).runTaskTimer(plugin, 0L, interval);
+        new HostileMobTask(plugin, sandstorm).runTaskTimer(plugin, 0L, interval);
     }
 }

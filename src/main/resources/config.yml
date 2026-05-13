@@ -1,5 +1,3 @@
-welcome-message: "Welcome to HD 31174 c, {player}!"
-
 silverfish:
   spawn-chance: 0.9
   potion:

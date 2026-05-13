@@ -57,7 +57,7 @@ public class SandstormManager extends BukkitRunnable {
                 if (pendingTicks <= 0) startStorm();
             } else if (rng.nextDouble() < (double) checkInterval / meanArrivalInterval) {
                 pendingTicks = warningTicks;
-                JoinListener.satSend("Warning! A sandstorm is approaching!", plugin);
+                JoinListener.satSend("Warning! Firestorm approaching!", plugin);
             }
             return;
         }
@@ -112,7 +112,7 @@ public class SandstormManager extends BukkitRunnable {
         active = true;
         remainingTicks = durationTicks;
         damageAccumulator = 0;
-        JoinListener.satSend("Danger! Sandstorm Detected!", plugin);
+        JoinListener.satSend("Severe Danger! Firestorm Imminent!", plugin);
     }
 
     public void stopStorm() {
@@ -121,7 +121,7 @@ public class SandstormManager extends BukkitRunnable {
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.resetPlayerWeather();
         }
-        JoinListener.satSend("Sandstorm is dissipating!", plugin);
+        JoinListener.satSend("All clear! Firestorm is dissipated!", plugin);
     }
 
     public boolean isActive() {

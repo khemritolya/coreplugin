@@ -4,7 +4,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Silverfish;
 import org.bukkit.event.EventHandler;
@@ -28,7 +27,7 @@ import java.util.Set;
 public class SilverfishSpawnListener implements Listener {
 
     private static final String TAG = "dangerousCritter";
-    private static final String spiceName = ChatColor.RESET + "Blue Dust";
+    private static final String spiceName = ChatColor.RESET + "" + ChatColor.BLUE + "Blue Dust";
 
     private final Coreplugin plugin;
     private final double spawnChance;

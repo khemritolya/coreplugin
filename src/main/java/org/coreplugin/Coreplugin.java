@@ -32,7 +32,7 @@ public final class Coreplugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new FoodListener(), this);
         HostileMobTask.register(this, sandstorm);
         DarknessListener.register(this);
-        getCommand("sandstorm").setExecutor(new SandstormCommand(sandstorm));
+        getCommand("firestorm").setExecutor(new SandstormCommand(sandstorm));
 
         // Main world is already loaded before onEnable on CraftBukkit 1.8;
         // set spawn now for any matching world that is already up.

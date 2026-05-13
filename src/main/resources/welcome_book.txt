@@ -20,10 +20,10 @@ carried out forthwith.
 
 Long Live \GOLDHis Imperial and Royal Majesty the Emperor\BLACK!
 
-Takarabe Naokuni,
+Takarabe Naokuni
 \BLUEJudge Imperial and Royal\BLACK in the domain of
 
-Shibusawa Helene,
+Shibusawa Helene
 \BLUEMarchioness of Altair and all Aquila
 \NEWPAGE
 \DARK_GRAYSUBJECT:\BLACK Data Access
@@ -37,16 +37,42 @@ geological and biological data on \GREENHD 31174 c\BLACK, which may aid your sur
 
 Long Live the \GOLDHis Imperial and Royal Majesty the Emperor\BLACK!
 
-Kageshima Ichibei,
+Kageshima Ichibei
 \BLUEAssistant Secretary to the Astronomer Imperial and Royal
 \NEWPAGE
-\DARK_GRAYSUBJECT:\BLACK FW: Survey Results
+\DARK_GRAYSUBJECT:\BLACK FW: Survey
 \DARK_GRAYFROM:\BLACK\BLUE Science Ministry
 
-\RED\MAGICAAA\RESETDATASTREAM ERROR\RED\MAGICAAA\RESET
+\RED\MAGICAAA\RESET\REDUNKNOWN ERROR\MAGICAAA\RESET
 
-\GREENNHD 31174 c\BLACK is a tidally locked planet in the \RED\MAGICAAAAA\RESET\BLACK governorate. The outside is \REDEXTREMELY\BLACK inhospitable to human life, though the atmosphere is breathable after 10 years of terraforming. Terraforming has been interrupted due to concerns of \RED\MAGICAAAAA\RESET\BLACK.
+\GREENHD 31174 c\BLACK is a tidally locked planet in the \RED\MAGICAAAA\RESET\BLACK sector. The surface is \REDEXTREMELY DANGEROUS\BLACK, though the atmosphere is breathable after 10 years' terraforming. Terraforming has
+\NEWPAGE
+been stopped due to concerns about
 
+\RED\MAGICAA\RESET\REDCOMSEC REDACTED\RED\MAGICAA\RESET
+
+modern scholarship thinks the risk of this is negligible. The surface currently consists of a desert on the day side, with an unusual orange coloration due to the presence of \RED\MAGICAAAAA\RESET\BLACK.
+
+\NEWPAGE
+The surface is otherwise covered in large rock formations
+some of which absorb the little water available on the surface. According to the decree of \GOLDHis Imperial and Royal Majesty the Emperor\BLACK, Earth-derived biospheres have been successfully introduced in some of
+\NEWPAGE
+these for the purpose of housing
+\REDexiled criminals\BLACK far from civilization. Orbital scans indicate other contain various \DARK_PURPLErare ores\BLACK of no economic value to the Realm. The night side of the planet contains
+
+\RED\MAGICAAA\RESET\REDDATA CORRUPT\MAGICAAA\RESET
+\NEWPAGE
+\GREENSandfish\BLACK, artifically introduced genetically modified earth animals
+ ingest various soil compounds and produce \BLUEBlue Dust\BLACK, which has been shown to have \RED\MAGICAAAA\RESET\BLACK effects on human physiology. The other organism introduced with some success to the desert is the \GREENGasbag Floater\BLACK, originally
+\NEWPAGE
+derived from bioengineering experiments on \RED\MAGICAAAAA\RESET\BLACK. The surface is occasionally wracked by global \REDfirestorms\BLACK. It is recommended to take shelter away from the exposed surface at such a time, as the effects are very dangerous to health.
+\NEWPAGE
+This concludes my summary of the survey results for
+\GREENHD 31174 c\BLACK. If you have any questions, please reach out to me.
+
+Ulrichson Jannik
+\BLUEAcademician, 2nd Class
+\BLUEImperial and Royal Planetological Academy
 
 \NEWPAGE
 \DARK_GRAYSUBJECT:\BLACK Read This!

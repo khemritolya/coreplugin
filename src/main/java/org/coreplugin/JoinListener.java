@@ -53,7 +53,7 @@ public class JoinListener implements Listener {
     }
 
     public static void satSend(String text, Plugin plugin) {
-        String newMessage = "<" +ChatColor.GOLD + "I.a.R. Satellite" + ChatColor.RESET + "> " + text;
+        String newMessage = "<" +ChatColor.GOLD + "Satellite" + ChatColor.RESET + "> " + text;
         plugin.getServer().broadcastMessage(newMessage);
     }
 

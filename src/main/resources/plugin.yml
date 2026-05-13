@@ -5,6 +5,6 @@ main: org.coreplugin.Coreplugin
 load: STARTUP
 
 commands:
-  sandstorm:
+  firestorm:
     description: Control sandstorms
-    usage: /sandstorm [start [seconds] | stop | status]
+    usage: /firestorm [start [seconds] | stop | status]

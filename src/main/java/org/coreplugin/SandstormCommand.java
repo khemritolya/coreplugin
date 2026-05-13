@@ -21,9 +21,9 @@ public class SandstormCommand implements CommandExecutor {
 
         if (args.length == 0 || args[0].equalsIgnoreCase("status")) {
             if (manager.isActive()) {
-                sender.sendMessage("Sandstorm is ACTIVE (" + manager.getRemainingTicks() + " ticks remaining).");
+                sender.sendMessage("Firestorm is ACTIVE (" + manager.getRemainingTicks() + " ticks remaining).");
             } else {
-                sender.sendMessage("No sandstorm is active.");
+                sender.sendMessage("No firestorm is active.");
             }
             return true;
         }
@@ -34,29 +34,29 @@ public class SandstormCommand implements CommandExecutor {
                 try {
                     seconds = Integer.parseInt(args[1]);
                 } catch (NumberFormatException e) {
-                    sender.sendMessage("Usage: /sandstorm start [seconds]");
+                    sender.sendMessage("Usage: /firestorm start [seconds]");
                     return true;
                 }
                 manager.startStorm(seconds * 20);
-                sender.sendMessage("Sandstorm started for " + seconds + " seconds.");
+                sender.sendMessage("Firestorm started for " + seconds + " seconds.");
             } else {
                 manager.startStorm();
-                sender.sendMessage("Sandstorm started.");
+                sender.sendMessage("Firestorm started.");
             }
             return true;
         }
 
         if (args[0].equalsIgnoreCase("stop")) {
             if (!manager.isActive()) {
-                sender.sendMessage("No sandstorm is currently active.");
+                sender.sendMessage("No firestorm is currently active.");
             } else {
                 manager.stopStorm();
-                sender.sendMessage("Sandstorm stopped.");
+                sender.sendMessage("Firestorm stopped.");
             }
             return true;
         }
 
-        sender.sendMessage("Usage: /sandstorm [start [seconds] | stop | status]");
+        sender.sendMessage("Usage: /firestorm [start [seconds] | stop | status]");
         return true;
     }
 }

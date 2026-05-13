@@ -1,5 +1,5 @@
 \DARK_GRAYSUBJECT:\BLACK Judgement
-\DARK_GRAYFROM:\BLACK\BLUE I.a.R. Court
+\DARK_GRAYFROM:\BLACK\BLUE Justice Ministry
 
 \RESETDear \RED\NAME\BLACK,
 
@@ -27,18 +27,27 @@ Shibusawa Helene,
 \BLUEMarchioness of Altair and all Aquila
 \NEWPAGE
 \DARK_GRAYSUBJECT:\BLACK Data Access
-\DARK_GRAYFROM: \BLUE I.a.R. Scientific Office
+\DARK_GRAYFROM: \BLUEScience Ministry
 
 \RESETDear \RED\NAME\BLACK,
 
-Having been sent to exile on \GREENHD 31174 c\BLACK, subject to a decree of \GOLDHis Imperial and Royal Majesty the Emperor\BLACK, the Imperial and Royal Scientific Office is to provide
+Having been sent to exile on \GREENHD 31174 c\BLACK, subject to a decree of \GOLDHis Imperial and Royal Majesty the Emperor\BLACK, the Imperial and Royal Scientific Office is to provide you with up-to-date
 \NEWPAGE
-you with up-to-date geological and biological data on \GREENHD 31174 c\BLACK, which may aid your survival.
+geological and biological data on \GREENHD 31174 c\BLACK, which may aid your survival.
 
 Long Live the \GOLDHis Imperial and Royal Majesty the Emperor\BLACK!
 
 Kageshima Ichibei,
 \BLUEAssistant Secretary to the Astronomer Imperial and Royal
+\NEWPAGE
+\DARK_GRAYSUBJECT:\BLACK FW: Survey Results
+\DARK_GRAYFROM:\BLACK\BLUE Science Ministry
+
+\RED\MAGICAAA\RESETDATASTREAM ERROR\RED\MAGICAAA\RESET
+
+\GREENNHD 31174 c\BLACK is a tidally locked planet in the \RED\MAGICAAAAA\RESET\BLACK governorate. The outside is \REDEXTREMELY\BLACK inhospitable to human life, though the atmosphere is breathable after 10 years of terraforming. Terraforming has been interrupted due to concerns of \RED\MAGICAAAAA\RESET\BLACK.
+
+
 \NEWPAGE
 \DARK_GRAYSUBJECT:\BLACK Read This!
 \DARK_GRAYFROM: \RED\MAGICAAAAAAAAA

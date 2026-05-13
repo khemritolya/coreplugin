@@ -19,26 +19,28 @@ public class HostileMobTask extends BukkitRunnable {
 
     private final Coreplugin plugin;
     private final SandstormManager sandstorm;
-    private final int spawnRadius;
     private final double rockExclusionFactor;
     private final double ghastChance;
     private final int ghastMaxPerPlayer;
+    private final int ghastSpawnRadius;
     private final double silverfishChance;
     private final int silverfishMaxPerPlayer;
+    private final int silverfishSpawnRadius;
     private final Random rng = new Random();
 
     private HostileMobTask(Coreplugin plugin, SandstormManager sandstorm) {
         this.plugin = plugin;
         this.sandstorm = sandstorm;
         ConfigurationSection cfg = plugin.getConfig().getConfigurationSection("night-mobs");
-        spawnRadius         = cfg.getInt("spawn-radius", 48);
         rockExclusionFactor = cfg.getDouble("rock-exclusion-factor", 2.0);
         ConfigurationSection ghastCfg  = cfg.getConfigurationSection("ghast");
         ghastChance         = ghastCfg.getDouble("chance", 0.3);
         ghastMaxPerPlayer   = ghastCfg.getInt("max-per-player", 2);
+        ghastSpawnRadius    = ghastCfg.getInt("spawn-radius", 70);
         ConfigurationSection silverfishCfg = cfg.getConfigurationSection("silverfish");
         silverfishChance       = silverfishCfg.getDouble("chance", 0.5);
         silverfishMaxPerPlayer = silverfishCfg.getInt("max-per-player", 3);
+        silverfishSpawnRadius  = silverfishCfg.getInt("spawn-radius", 30);
     }
 
     @Override
@@ -56,9 +58,11 @@ public class HostileMobTask extends BukkitRunnable {
             }
 
             List<Player> players = world.getPlayers();
-            double cullRangeSq = (spawnRadius * 3.0) * (spawnRadius * 3.0);
+            double ghastCullSq      = (ghastSpawnRadius * 3.0) * (ghastSpawnRadius * 3.0);
+            double silverfishCullSq = (silverfishSpawnRadius * 3.0) * (silverfishSpawnRadius * 3.0);
             for (LivingEntity e : world.getLivingEntities()) {
                 if (!e.hasMetadata(TAG)) continue;
+                double cullRangeSq = e instanceof Ghast ? ghastCullSq : silverfishCullSq;
                 boolean inRange = false;
                 for (Player p : players) {
                     if (e.getLocation().distanceSquared(p.getLocation()) <= cullRangeSq) {
@@ -73,18 +77,18 @@ public class HostileMobTask extends BukkitRunnable {
             for (Player player : players) {
                 if (countTagged(Ghast.class, world) < ghastMaxPerPlayer * cap
                         && rng.nextDouble() < ghastChance) {
-                    trySpawn(EntityType.GHAST, player, world, generator, true);
+                    trySpawn(EntityType.GHAST, player, world, generator, true, ghastSpawnRadius);
                 }
                 if (countTagged(Silverfish.class, world) < silverfishMaxPerPlayer * cap
                         && rng.nextDouble() < silverfishChance) {
-                    trySpawn(EntityType.SILVERFISH, player, world, generator, false);
+                    trySpawn(EntityType.SILVERFISH, player, world, generator, false, silverfishSpawnRadius);
                 }
             }
         }
     }
 
     private void trySpawn(EntityType type, Player player, World world,
-                          DesertWorldGenerator generator, boolean aerial) {
+                          DesertWorldGenerator generator, boolean aerial, int spawnRadius) {
         Location origin = player.getLocation();
         for (int attempt = 0; attempt < 5; attempt++) {
             double angle = rng.nextDouble() * 2 * Math.PI;

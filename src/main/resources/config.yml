@@ -7,15 +7,15 @@ silverfish:
 
 night-mobs:
   check-interval: 40
-  light-threshold: 7
-  spawn-radius: 40
   rock-exclusion-factor: 1.5
   ghast:
     chance: 0.3
     max-per-player: 3
+    spawn-radius: 70
   silverfish:
     chance: 0.9
     max-per-player: 7
+    spawn-radius: 30
 
 darkness:
   threshold: 5

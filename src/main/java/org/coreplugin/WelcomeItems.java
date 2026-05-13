@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -20,7 +21,8 @@ public class WelcomeItems {
     public static ItemStack loadFood(Plugin plugin, Player player) {
         ItemStack gloop = new ItemStack(Material.COOKIE, 5);
         ItemMeta meta = gloop.getItemMeta();
-        meta.setLore(Collections.singletonList(ChatColor.RESET + "" + ChatColor.GRAY + "by Nitchisu Inc."));
+        meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by Nitchisu Inc.",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Imperial Quality™"));
         gloop.setItemMeta(meta);
         return gloop;
     }

@@ -48,7 +48,7 @@ public class JoinListener implements Listener {
         }
 
         satSend("Detected Exile Biosignature!", plugin);
-        satSend("Nickname: ``" + ChatColor.RED + player.getName() + ChatColor.RESET + "''", plugin);
+        satSend("Nickname: " + ChatColor.RED + player.getName() + ChatColor.RESET, plugin);
         satSend("Crime: " + ChatColor.RED + getCrime(plugin, player), plugin);
     }
 

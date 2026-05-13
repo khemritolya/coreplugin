@@ -29,6 +29,7 @@ public final class Coreplugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new MobSpawnListener(), this);
         getServer().getPluginManager().registerEvents(new HostileMobListener(), this);
         getServer().getPluginManager().registerEvents(new WeatherListener(sandstorm), this);
+        getServer().getPluginManager().registerEvents(new FoodListener(), this);
         HostileMobTask.register(this, sandstorm);
         DarknessListener.register(this);
         getCommand("sandstorm").setExecutor(new SandstormCommand(sandstorm));

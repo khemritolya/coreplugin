@@ -5,6 +5,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 
 import java.io.File;
@@ -14,9 +15,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class WelcomeBook {
+public class WelcomeItems {
 
-    public static ItemStack load(Plugin plugin, Player player) {
+    public static ItemStack loadFood(Plugin plugin, Player player) {
+        ItemStack gloop = new ItemStack(Material.COOKIE, 5);
+        ItemMeta meta = gloop.getItemMeta();
+        meta.setLore(Collections.singletonList(ChatColor.RESET + "" + ChatColor.GRAY + "by Nitchisu Inc."));
+        gloop.setItemMeta(meta);
+        return gloop;
+    }
+
+    public static ItemStack loadBook(Plugin plugin, Player player) {
         File bookFile = new File(plugin.getDataFolder(), "welcome_book.txt");
         List<String> lines;
         try {

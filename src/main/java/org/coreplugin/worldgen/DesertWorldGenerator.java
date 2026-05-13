@@ -1,10 +1,13 @@
 package org.coreplugin.worldgen;
 
 import org.bukkit.Chunk;
+import org.bukkit.Location;
+import org.coreplugin.RngUtils;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.EntityType;
 import org.bukkit.generator.BlockPopulator;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.material.MaterialData;
@@ -49,6 +52,7 @@ public class DesertWorldGenerator extends ChunkGenerator {
     private final double oasisClayRadius;
     private final double   oasisDecorationDensity;
     private final double[] oasisDecorationThresholds;
+    private final double[] oasisMobRates;
 
     private static final String[] DECORATION_KEYS = {
         "tall-grass", "fern", "dandelion", "poppy",
@@ -86,12 +90,14 @@ public class DesertWorldGenerator extends ChunkGenerator {
     private final double[] oreDensities;
 
     // Runtime
+    private final JavaPlugin plugin;
     private FBMNoise     noise;
     private RockField    rockField;
     private SimplexNoise rockNoise;
     private long         cachedSeed = Long.MIN_VALUE;
 
     public DesertWorldGenerator(JavaPlugin plugin) {
+        this.plugin = plugin;
         ConfigurationSection cfg = plugin.getConfig().getConfigurationSection("world-gen");
         minHeight = cfg.getInt("min-height", 40);
         maxHeight = cfg.getInt("max-height", 80);
@@ -143,6 +149,13 @@ public class DesertWorldGenerator extends ChunkGenerator {
         oasisPondBoundaryAmplitude    = oasisCfg.getInt("pond-boundary-amplitude",   4);
         oasisClayRadius = oasisCfg.getDouble("clay-radius",              1.0);
         oasisDecorationDensity = oasisCfg.getDouble("decoration-density", 0.25);
+        ConfigurationSection mobRatesCfg = oasisCfg.getConfigurationSection("mob-spawn-rates");
+        oasisMobRates = new double[MOB_RATE_KEYS.length];
+        for (int i = 0; i < MOB_RATE_KEYS.length; i++) {
+            oasisMobRates[i] = mobRatesCfg != null
+                ? mobRatesCfg.getDouble(MOB_RATE_KEYS[i], MOB_RATE_DEFAULTS[i])
+                : MOB_RATE_DEFAULTS[i];
+        }
         ConfigurationSection decoWeightsCfg = oasisCfg.getConfigurationSection("decoration-weights");
         double[] decoWeights = new double[DECORATION_KEYS.length];
         for (int i = 0; i < DECORATION_KEYS.length; i++) {
@@ -411,15 +424,18 @@ public class DesertWorldGenerator extends ChunkGenerator {
                     long bSeed = rockSeed ^ ((long) wx * 0xB5EE8E3FL) ^ ((long) wz * 0xC7537B51L);
                     Random blockRng = new Random(bSeed);
                     if (blockRng.nextDouble() < oasisDecorationDensity) {
-                        double typeRoll = blockRng.nextDouble();
-                        MaterialData deco = DECORATION_TYPES[DECORATION_TYPES.length - 1];
-                        for (int d = 0; d < oasisDecorationThresholds.length - 1; d++) {
-                            if (typeRoll < oasisDecorationThresholds[d]) {
-                                deco = DECORATION_TYPES[d];
-                                break;
+                        long glowSeed = rockSeed ^ ((long) wx * 0x6C62272E07BB0142L) ^ ((long) wz * 0x9E3779B97F4A7C15L);
+                        if (new Random(glowSeed).nextDouble() >= oasisGlowstoneDensity) {
+                            double typeRoll = blockRng.nextDouble();
+                            MaterialData deco = DECORATION_TYPES[DECORATION_TYPES.length - 1];
+                            for (int d = 0; d < oasisDecorationThresholds.length - 1; d++) {
+                                if (typeRoll < oasisDecorationThresholds[d]) {
+                                    deco = DECORATION_TYPES[d];
+                                    break;
+                                }
                             }
+                            chunk.setBlock(lx, localFloorY + 1, lz, deco);
                         }
-                        chunk.setBlock(lx, localFloorY + 1, lz, deco);
                     }
                 }
             }
@@ -600,6 +616,42 @@ public class DesertWorldGenerator extends ChunkGenerator {
         }
     }
 
+    private static final String[]      MOB_RATE_KEYS     = { "cow", "pig", "sheep", "chicken" };
+    private static final double[]      MOB_RATE_DEFAULTS = {  1.5,   1.0,   1.5,     2.0     };
+    private static final EntityType[]  PASSIVE_MOBS      = {
+        EntityType.COW, EntityType.PIG, EntityType.SHEEP, EntityType.CHICKEN
+    };
+
+    private void spawnOasisMobs(RockSpec rock, World world, Random rng) {
+        double innerRadius = rock.radius - rockShellThickness;
+        double dyC        = rock.centerY - rock.entranceY;
+        double footprintR = Math.sqrt(Math.max(0, innerRadius * innerRadius - dyC * dyC));
+
+        for (int t = 0; t < PASSIVE_MOBS.length; t++) {
+            int count = RngUtils.poissonSample(rng, oasisMobRates[t]);
+            for (int i = 0; i < count; i++) {
+                double angle = rng.nextDouble() * 2.0 * Math.PI;
+                double r     = footprintR * (0.45 + rng.nextDouble() * 0.30);
+                int wx = rock.centerX + (int) (r * Math.cos(angle));
+                int wz = rock.centerZ + (int) (r * Math.sin(angle));
+
+                // Compute interior ceiling at this horizontal position, then scan down
+                double hd = Math.sqrt((double)(wx - rock.centerX) * (wx - rock.centerX)
+                                    + (double)(wz - rock.centerZ) * (wz - rock.centerZ));
+                int topY   = rock.centerY + (int) Math.sqrt(Math.max(0, innerRadius * innerRadius - hd * hd));
+                int spawnY = rock.entranceY + 1;
+                for (int y = topY; y >= rock.entranceY; y--) {
+                    if (world.getBlockAt(wx, y, wz).getType() != Material.AIR) {
+                        spawnY = y + 1;
+                        break;
+                    }
+                }
+
+                world.spawnEntity(new Location(world, wx + 0.5, spawnY, wz + 0.5), PASSIVE_MOBS[t]);
+            }
+        }
+    }
+
     private class OasisPopulator extends BlockPopulator {
         @Override
         public void populate(World world, Random random, Chunk chunk) {
@@ -611,6 +663,17 @@ public class DesertWorldGenerator extends ChunkGenerator {
                     placeGlowstoneFlowers(rock, world, chunkX, chunkZ);
                     placeCeilingGlowstone(rock, world, chunkX, chunkZ);
                     placeCeilingVines(rock, world, chunkX, chunkZ);
+
+                    // Spawn mobs once, in the chunk that contains the rock center.
+                    // Deferred to next tick so the chunk is fully tracked before entities are added.
+                    if (chunkX == Math.floorDiv(rock.centerX, 16) && chunkZ == Math.floorDiv(rock.centerZ, 16)) {
+                        final RockSpec r = rock;
+                        final long rockSeed = cachedSeed
+                            ^ ((long) rock.centerX * 0x9E3779B97F4A7C15L)
+                            ^ ((long) rock.centerZ * 0x6C62272E07BB0142L);
+                        plugin.getServer().getScheduler().runTask(plugin, () ->
+                            spawnOasisMobs(r, world, new Random(rockSeed ^ 0x4D4F425350574EL)));
+                    }
                 }
             }
         }

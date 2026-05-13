@@ -78,7 +78,7 @@ public class SilverfishSpawnListener implements Listener {
         ItemStack potion = new ItemStack(Material.POTION);
         PotionMeta meta = (PotionMeta) potion.getItemMeta();
         int mark = poissonSample(lambda);
-        meta.setDisplayName(ChatColor.RESET + "" + ChatColor.MAGIC + "a" + ChatColor.RESET + " Spice " + ChatColor.MAGIC + "a");
+        meta.setDisplayName(ChatColor.RESET + "" + ChatColor.MAGIC + "A" + ChatColor.RESET + " Spice " + ChatColor.MAGIC + "A");
 
         meta.addCustomEffect(
             new PotionEffect(PotionEffectType.SATURATION, duration, mark, false, false), true);
@@ -89,7 +89,7 @@ public class SilverfishSpawnListener implements Listener {
         meta.addCustomEffect(
             new PotionEffect(PotionEffectType.NIGHT_VISION, duration, 0, false, false), true);
 
-        meta.setLore(Collections.singletonList(ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Grade: " + ChatColor.GOLD + toRoman(mark + 1)));
+        meta.setLore(Collections.singletonList(ChatColor.RESET + "" + ChatColor.GRAY + "Grade: " + ChatColor.GOLD + toRoman(mark + 1)));
         potion.setItemMeta(meta);
         loc.getWorld().dropItemNaturally(loc, potion);
     }
@@ -118,12 +118,7 @@ public class SilverfishSpawnListener implements Listener {
         return M[n / 1000] + C[(n % 1000) / 100] + X[(n % 100) / 10] + I[n % 10];
     }
 
-    // Knuth algorithm: Poisson(λ) sample used as Bukkit amplifier (0 = level I)
     private int poissonSample(double lam) {
-        double threshold = Math.exp(-lam);
-        double p = 1.0;
-        int k = 0;
-        do { k++; p *= rng.nextDouble(); } while (p > threshold);
-        return k - 1;
+        return RngUtils.poissonSample(rng, lam);
     }
 }

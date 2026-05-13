@@ -68,6 +68,11 @@ world-gen:
       pond-boundary-amplitude: 1
       clay-radius: 0.5
       decoration-density: 0.5
+      mob-spawn-rates:
+        cow: 1.0
+        pig: 0.5
+        sheep: 1.5
+        chicken: 2.0
       decoration-weights:
         tall-grass: 0.35
         fern: 0.10

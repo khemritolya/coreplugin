@@ -25,6 +25,7 @@ public final class Coreplugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new JoinListener(this), this);
         getServer().getPluginManager().registerEvents(new SilverfishSpawnListener(this), this);
         getServer().getPluginManager().registerEvents(new MobSpawnListener(), this);
+        getServer().getPluginManager().registerEvents(new WeatherListener(), this);
         NightMobTask.register(this);
         DarknessListener.register(this);
 

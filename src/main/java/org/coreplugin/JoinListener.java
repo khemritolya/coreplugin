@@ -1,6 +1,7 @@
 package org.coreplugin;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -34,10 +35,16 @@ public class JoinListener implements Listener {
             if (plugin.isGeneratorWorld(player.getWorld().getName())) {
                 player.teleport(player.getWorld().getSpawnLocation());
             }
-            ItemStack book = WelcomeBook.load(plugin, player);
+            ItemStack book = WelcomeItems.loadBook(plugin, player);
             if (book != null) {
                 player.getInventory().addItem(book);
             }
+
+            ItemStack bed = new ItemStack(Material.BED);
+            player.getInventory().addItem(bed);
+
+            ItemStack food = WelcomeItems.loadFood(plugin, player);
+            player.getInventory().addItem(food);
         }
 
         satSend("Detected Exile Biosignature!", plugin);

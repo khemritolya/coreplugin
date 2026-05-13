@@ -21,6 +21,7 @@ public final class Coreplugin extends JavaPlugin {
     @Override
     public void onEnable() {
         saveResource("welcome_book.txt", false);
+        saveResource("crimes.txt", false);
         getServer().getPluginManager().registerEvents(new JoinListener(this), this);
         getServer().getPluginManager().registerEvents(new SilverfishSpawnListener(this), this);
         getServer().getPluginManager().registerEvents(new MobSpawnListener(), this);

@@ -34,7 +34,7 @@ public class WelcomeBook {
                 page = new StringBuilder();
             } else {
                 if (page.length() > 0) page.append('\n');
-                page.append(applyColors(line, player));
+                page.append(applyColors(line, player, plugin));
             }
         }
         pages.add(page.toString());
@@ -49,9 +49,9 @@ public class WelcomeBook {
         return book;
     }
 
-    private static String applyColors(String line, Player player) {
+    private static String applyColors(String line, Player player, Plugin plugin) {
         line = line.replace("\\NAME", player.getName());
-        line = line.replace("\\CRIME", JoinListener.getCrime(player).toUpperCase());
+        line = line.replace("\\CRIME", JoinListener.getCrime(plugin, player).toUpperCase());
         for (ChatColor color : ChatColor.values()) {
             line = line.replace("\\" + color.name(), color.toString());
         }

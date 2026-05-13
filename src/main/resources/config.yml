@@ -2,8 +2,8 @@ silverfish:
   spawn-chance: 0.9
   potion:
     drop-chance: 0.9
-    duration: 400
-    level-lambda: 2.0
+    duration: 4000
+    level-lambda: 2.5
 
 night-mobs:
   check-interval: 40

@@ -68,6 +68,7 @@ public class JoinListener implements Listener {
             crimes = Collections.singletonList("Treason against the Emperor");
         }
         if (crimes.isEmpty()) return "Treason against the Emperor";
+
         long seed = p.getUniqueId().getMostSignificantBits() ^ p.getUniqueId().getLeastSignificantBits();
 //        return crimes.get(crimes.size() - 1);
         return crimes.get(new Random(seed).nextInt(crimes.size()));

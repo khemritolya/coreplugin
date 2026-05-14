@@ -27,7 +27,7 @@ import java.util.Set;
 public class SilverfishSpawnListener implements Listener {
 
     private static final String TAG = "dangerousCritter";
-    private static final String spiceName = ChatColor.RESET + "" + ChatColor.BLUE + "Blue Dust";
+    private static final String spiceName = ChatColor.RESET + "" + ChatColor.BLUE + "Nacre";
 
     private final Coreplugin plugin;
     private final double spawnChance;

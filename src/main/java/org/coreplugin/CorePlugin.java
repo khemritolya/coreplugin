@@ -37,6 +37,7 @@ public final class CorePlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new JungleTreeListener(glowstoneChance), this);
         HostileMobTask.register(this, sandstorm);
         OreCaveDamageTask.register(this);
+        SpeedBootsTask.register(this);
         DarknessListener.register(this);
         getCommand("solarflare").setExecutor(new SandstormCommand(sandstorm));
 

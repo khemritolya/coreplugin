@@ -11,6 +11,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -18,7 +20,9 @@ import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -38,6 +42,8 @@ public class SilverfishSpawnListener implements Listener {
     private final double spiceGradeLambda;
     private final double ghastStringLambda;
     private final float  prospectorExplosionPower;
+    private final float  snowballExplosionPower;
+    private final double explosionRateFactor;
     private final Random rng = new Random();
     private final Set<String> recentBreaks = new HashSet<>();
 
@@ -52,7 +58,9 @@ public class SilverfishSpawnListener implements Listener {
         spiceDuration            = plugin.getConfig().getInt(   "silverfish.spice-field.potion.duration",      2000);
         spiceGradeLambda         = plugin.getConfig().getDouble("silverfish.spice-field.potion.level-lambda",  3.0);
         ghastStringLambda        = plugin.getConfig().getDouble("night-mobs.ghast.string-drop-lambda",         1.0);
-        prospectorExplosionPower = (float) plugin.getConfig().getDouble("prospector-pickaxe.explosion-power",  2.0);
+        prospectorExplosionPower = (float) plugin.getConfig().getDouble("prospector-pickaxe.explosion-power", 2.0);
+        snowballExplosionPower   = (float) plugin.getConfig().getDouble("snowball.explosion-power",           2.0);
+        explosionRateFactor      = plugin.getConfig().getDouble("silverfish.explosion-rate-factor",           0.2);
     }
 
     @EventHandler
@@ -63,9 +71,12 @@ public class SilverfishSpawnListener implements Listener {
             if (heldMeta != null && heldMeta.hasDisplayName()
                     && heldMeta.getDisplayName().equals(CustomItems.PROSPECTOR_NAME)) {
                 Location loc = event.getBlock().getLocation().add(0.5, 0.5, 0.5);
-                plugin.getServer().getScheduler().runTask(plugin, () ->
-                        loc.getWorld().createExplosion(loc.getX(), loc.getY(), loc.getZ(),
-                                prospectorExplosionPower, false, true));
+                Map<Block, Byte> nearbySand = collectSandAround(loc, (int) prospectorExplosionPower + 2);
+                plugin.getServer().getScheduler().runTask(plugin, () -> {
+                    loc.getWorld().createExplosion(loc.getX(), loc.getY(), loc.getZ(),
+                            prospectorExplosionPower, false, true);
+                    spawnSilverfishFromExplosion(nearbySand);
+                });
             }
         }
 
@@ -87,6 +98,34 @@ public class SilverfishSpawnListener implements Listener {
         Silverfish fish = (Silverfish) block.getWorld().spawnEntity(loc, EntityType.SILVERFISH);
         initSilverfish(fish, plugin);
         if (isSpice) fish.setMetadata(SPICE_TAG, new FixedMetadataValue(plugin, true));
+    }
+
+    @EventHandler
+    public void onEntityExplode(EntityExplodeEvent event) {
+        for (Block block : event.blockList()) {
+            if (block.getType() != Material.SAND) continue;
+            byte data = block.getData();
+            boolean isSpice = data == 0;
+            if (!isSpice && data != 1) continue;
+
+            double chance = (isSpice ? spiceSpawnChance : spawnChance) * explosionRateFactor;
+            if (rng.nextDouble() >= chance) continue;
+
+            Location loc = block.getLocation().add(0.5, 0.5, 0.5);
+            Silverfish fish = (Silverfish) block.getWorld().spawnEntity(loc, EntityType.SILVERFISH);
+            initSilverfish(fish, plugin);
+            if (isSpice) fish.setMetadata(SPICE_TAG, new FixedMetadataValue(plugin, true));
+        }
+    }
+
+    @EventHandler
+    public void onProjectileHit(ProjectileHitEvent event) {
+        if (event.getEntity().getType() != EntityType.SNOWBALL) return;
+        Location loc = event.getEntity().getLocation();
+        Map<Block, Byte> nearbySand = collectSandAround(loc, (int) snowballExplosionPower + 2);
+        loc.getWorld().createExplosion(loc.getX(), loc.getY(), loc.getZ(),
+                snowballExplosionPower, false, true);
+        spawnSilverfishFromExplosion(nearbySand);
     }
 
     @EventHandler
@@ -124,6 +163,37 @@ public class SilverfishSpawnListener implements Listener {
             int amt = hand.getAmount() - 1;
             player.setItemInHand(amt <= 0 ? null : new ItemStack(Material.GLASS_BOTTLE, amt));
         }, 1L);
+    }
+
+    private Map<Block, Byte> collectSandAround(Location center, int radius) {
+        Map<Block, Byte> result = new HashMap<>();
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dy = -radius; dy <= radius; dy++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    Block b = center.getWorld().getBlockAt(
+                            center.getBlockX() + dx, center.getBlockY() + dy, center.getBlockZ() + dz);
+                    if (b.getType() == Material.SAND) {
+                        byte data = b.getData();
+                        if (data == 0 || data == 1) result.put(b, data);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    private void spawnSilverfishFromExplosion(Map<Block, Byte> candidates) {
+        for (Map.Entry<Block, Byte> entry : candidates.entrySet()) {
+            Block b = entry.getKey();
+            if (b.getType() != Material.AIR) continue;
+            boolean isSpice = entry.getValue() == 0;
+            double chance = (isSpice ? spiceSpawnChance : spawnChance) * explosionRateFactor;
+            if (rng.nextDouble() >= chance) continue;
+            Location loc = b.getLocation().add(0.5, 0.5, 0.5);
+            Silverfish fish = (Silverfish) loc.getWorld().spawnEntity(loc, EntityType.SILVERFISH);
+            initSilverfish(fish, plugin);
+            if (isSpice) fish.setMetadata(SPICE_TAG, new FixedMetadataValue(plugin, true));
+        }
     }
 
     static void initSilverfish(Silverfish fish, CorePlugin plugin) {

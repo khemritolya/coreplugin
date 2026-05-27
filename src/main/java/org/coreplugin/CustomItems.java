@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
@@ -26,10 +27,13 @@ import static org.coreplugin.RngUtils.poissonSample;
 
 public class CustomItems {
 
-    public static final String SPICE_NAME              = ChatColor.RESET + "" + ChatColor.BLUE    + "Nacre";
+    public static final String SPICE_NAME              = ChatColor.RESET + "" + ChatColor.BLUE + "Nacre";
     public static final String MONOMOLECULAR_BLADE_NAME = ChatColor.RESET + "" + ChatColor.DARK_RED + "Monomolecular Blade";
     public static final String PROSPECTOR_NAME         = ChatColor.RESET + "" + ChatColor.DARK_RED + "Prospector's Pickaxe";
-    public static final String HARD_HAT_NAME           = ChatColor.RESET + "" + ChatColor.DARK_RED    + "Hard Hat";
+    public static final String HARD_HAT_NAME           = ChatColor.RESET + "" + ChatColor.DARK_RED + "Hard Hat";
+    public static final String SPEED_BOOTS_NAME        = ChatColor.RESET + "" + ChatColor.DARK_RED + "QuantumSuit Boots";
+    public static final String PLASMA_CHARGE_NAME      = ChatColor.RESET + "" + ChatColor.AQUA + "Plasma Charge";
+    private static final int CHEST_SLOTS = 27;
 
     public static ItemStack loadSpice(int mark, int duration) {
         ItemStack potion = new ItemStack(Material.POTION);
@@ -87,6 +91,7 @@ public class CustomItems {
         meta.setDisplayName(PROSPECTOR_NAME);
         meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by Amakuni Concern",
                 ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Hard Hat Required"));
+        pick.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 10);
         pick.setItemMeta(meta);
         return pick;
     }
@@ -102,6 +107,31 @@ public class CustomItems {
         sword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
         sword.setDurability((short) (Short.MAX_VALUE - 1));
         return sword;
+    }
+
+    public static ItemStack loadSpeedBoots() {
+        ItemStack boots = new ItemStack(Material.LEATHER_BOOTS);
+        LeatherArmorMeta meta = (LeatherArmorMeta) boots.getItemMeta();
+        meta.setColor(org.bukkit.Color.WHITE);
+        meta.setDisplayName(SPEED_BOOTS_NAME);
+        meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by Amakuni Concern",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Experimental Prototype"));
+        boots.setItemMeta(meta);
+        boots.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
+        boots.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
+        boots.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 10);
+        return boots;
+    }
+
+    public static ItemStack loadPlasmaCharge(int amount) {
+        ItemStack snowball = new ItemStack(Material.SNOW_BALL, amount);
+        ItemMeta meta = snowball.getItemMeta();
+        meta.setDisplayName(PLASMA_CHARGE_NAME);
+        meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by Imperial High-Energy Lab",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "High Energy Physics on Tap"));
+        snowball.setItemMeta(meta);
+        snowball.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 10);
+        return snowball;
     }
 
     public static ItemStack loadWaterBucket() {
@@ -148,8 +178,6 @@ public class CustomItems {
         return egg;
     }
 
-    private static final int CHEST_SLOTS = 20;
-
     public static List<ItemStack> buildCacheContents(Random rng, double cellFillChance,
                                                      String[] itemKeys, double[] itemThresholds) {
         List<ItemStack> items = new ArrayList<>();
@@ -173,6 +201,8 @@ public class CustomItems {
             case "hard-hat":            return loadHardHat();
             case "prospector-pickaxe":  return loadProspectorPickaxe();
             case "monomolecular-blade": return loadMonomolecularBlade();
+            case "speed-boots":         return loadSpeedBoots();
+            case "plasma-charge":       return loadPlasmaCharge(poissonSample(rng, 1) + 1);
             case "water-bucket":        return loadWaterBucket();
             case "cow-egg":             return loadCowEgg();
             case "pig-egg":             return loadPigEgg();
@@ -222,5 +252,14 @@ public class CustomItems {
             line = line.replace("\\" + color.name(), color.toString());
         }
         return line;
+    }
+
+    public static ItemStack loadBed() {
+        ItemStack bed = new ItemStack(Material.BED);
+        ItemMeta meta = bed.getItemMeta();
+        meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by New Fuji Co. Ltd.",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Click to set Spawn"));
+        bed.setItemMeta(meta);
+        return bed;
     }
 }

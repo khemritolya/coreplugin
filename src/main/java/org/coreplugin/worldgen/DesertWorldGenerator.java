@@ -63,10 +63,10 @@ public class DesertWorldGenerator extends ChunkGenerator {
     private final double[] oasisCacheItemThresholds;
 
     private static final String[] CACHE_ITEM_KEYS = {
-        "cookies", "hard-hat", "prospector-pickaxe", "monomolecular-blade", "water-bucket",
-        "cow-egg", "pig-egg", "sheep-egg", "chicken-egg"
+        "cookies", "hard-hat", "prospector-pickaxe", "monomolecular-blade", "speed-boots", "plasma-charge",
+        "water-bucket", "cow-egg", "pig-egg", "sheep-egg", "chicken-egg"
     };
-    private static final double[] CACHE_ITEM_DEFAULTS = { 5.0, 10.0, 10.0, 1.0, 4.0, 2.0, 2.0, 2.0, 2.0 };
+    private static final double[] CACHE_ITEM_DEFAULTS = { 5.0, 10.0, 10.0, 1.0, 8.0, 6.0, 4.0, 2.0, 2.0, 2.0, 2.0 };
 
     private static final String[] DECORATION_KEYS = {
         "tall-grass", "fern", "dandelion", "poppy",

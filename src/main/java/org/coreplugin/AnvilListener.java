@@ -16,7 +16,9 @@ public class AnvilListener implements Listener {
     private static final Set<String> UNREPAIRABLE = new HashSet<>(Arrays.asList(
             CustomItems.MONOMOLECULAR_BLADE_NAME,
             CustomItems.PROSPECTOR_NAME,
-            CustomItems.HARD_HAT_NAME
+            CustomItems.HARD_HAT_NAME,
+            CustomItems.SPEED_BOOTS_NAME,
+            CustomItems.PLASMA_CHARGE_NAME
     ));
 
     @EventHandler

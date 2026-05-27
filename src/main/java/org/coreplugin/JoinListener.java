@@ -8,6 +8,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 
 import java.io.File;
@@ -41,7 +42,8 @@ public class JoinListener implements Listener {
                 player.getInventory().addItem(book);
             }
 
-            ItemStack bed = new ItemStack(Material.BED);
+            ItemStack bed = CustomItems.loadBed();
+
             player.getInventory().addItem(bed);
 
             ItemStack food = CustomItems.loadCookies(5);

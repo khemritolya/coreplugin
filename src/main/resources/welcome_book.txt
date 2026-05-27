@@ -58,14 +58,13 @@ The surface is otherwise covered in large rock formations
 some of which absorb the little water available on the surface. According to the decree of \GOLDHis Imperial and Royal Majesty the Emperor\BLACK, Earth-derived biospheres have been successfully introduced in some of
 \NEWPAGE
 these for the purpose of housing
-\REDexiled criminals\BLACK far from civilization. Orbital scans indicate other contain various \DARK_PURPLErare ores\BLACK of no economic value to the Realm. The night side of the planet contains
+\REDexiled criminals\BLACK far from civilization. Scans indicate other rocks contain various \DARK_PURPLErare ores\BLACK of no economic value due to the presence of \REDradioisotopes\BLACK. The night side of the planet contains
 
 \RED\MAGICAAA\RESET\REDDATA CORRUPT\MAGICAAA\RESET
 \NEWPAGE
-\GREENSandfish\BLACK, artifically introduced genetically modified earth animals
- ingest various soil compounds and produce \BLUEBlue Dust\BLACK, which has been shown to have \RED\MAGICAAAA\RESET\BLACK effects on human physiology. The other organism introduced with some success to the desert is the \GREENGasbag Floater\BLACK, originally
+\GREENXenosinicus Crysobitis\BLACK are also known as the \GREENSandfish\BLACK. These artificially introduced genetically modified earth animals ingest various soil compounds and produce \BLUENacre\BLACK, which has been shown to have \RED\MAGICAAAA\RESET\BLACK effects on human physiology. We recommend further study.
 \NEWPAGE
-derived from bioengineering experiments on \RED\MAGICAAAAA\RESET\BLACK. The surface is occasionally wracked by global \REDfirestorms\BLACK. It is recommended to take shelter away from the exposed surface at such a time, as the effects are very dangerous to health.
+The other organism introduced with some success is \GREENXenomedusosa Vesicus\BLACK or the \GREENCubozoa\BLACK, originally derived from bioengineering experiments on \RED\MAGICAAAAA\RESET\BLACK. The surface is occasionally wracked by \REDSolar Flares\BLACK. It is recommended to take shelter away from the exposed surface.
 \NEWPAGE
 This concludes my summary of the survey results for
 \GREENHD 31174 c\BLACK. If you have any questions, please reach out to me.

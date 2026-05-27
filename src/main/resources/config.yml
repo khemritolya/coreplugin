@@ -1,4 +1,5 @@
 silverfish:
+  explosion-rate-factor: 0.2
   red-sand:
     spawn-chance: 0.5
     potion:
@@ -81,18 +82,20 @@ world-gen:
       pond-boundary-amplitude: 1
       clay-radius: 0.5
       decoration-density: 0.5
-      cache-chance: 0.99
-      cache-cell-fill-chance: 0.99
+      cache-chance: 0.9999
+      cache-cell-fill-chance: 0.35
       cache-item-weights:
         cookies: 5.0
-        hard-hat: 10.0
-        prospector-pickaxe: 10.0
+        hard-hat: 1.0
+        prospector-pickaxe: 1.0
         monomolecular-blade: 1.0
-        water-bucket: 4.0
-        cow-egg: 2.0
-        pig-egg: 2.0
-        sheep-egg: 2.0
-        chicken-egg: 2.0
+        speed-boots: 1.0
+        plasma-charge: 1.0
+        water-bucket: 2.0
+        cow-egg: 3.0
+        pig-egg: 3.0
+        sheep-egg: 3.0
+        chicken-egg: 5.0
       mob-spawn-rates:
         cow: 1.0
         pig: 0.5
@@ -136,6 +139,9 @@ jungle-trees:
 
 prospector-pickaxe:
   explosion-power: 4.0
+
+snowball:
+  explosion-power: 7.0
 
 sandstorm:
   duration-min: 2400

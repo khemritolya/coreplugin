@@ -24,74 +24,79 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
+import static org.coreplugin.RngUtils.poissonSample;
+
 public class SilverfishSpawnListener implements Listener {
 
-    private static final String TAG = "dangerousCritter";
-    private static final String spiceName = ChatColor.RESET + "" + ChatColor.BLUE + "Nacre";
+    private static final String TAG       = "dangerousCritter";
+    private static final String SPICE_TAG = "fieldCritter";
+    public static final String spiceName = ChatColor.RESET + "" + ChatColor.BLUE + "Nacre";
 
-    private final Coreplugin plugin;
+    private final CorePlugin plugin;
     private final double spawnChance;
     private final double dropChance;
-    private final int duration;
+    private final int    duration;
     private final double lambda;
+    private final double spiceSpawnChance;
+    private final double spiceDropChance;
+    private final int    spiceDuration;
+    private final double spiceGradeLambda;
+    private final double ghastStringLambda;
     private final Random rng = new Random();
     private final Set<String> recentBreaks = new HashSet<>();
 
-    public SilverfishSpawnListener(Coreplugin plugin) {
+    public SilverfishSpawnListener(CorePlugin plugin) {
         this.plugin = plugin;
-        spawnChance = plugin.getConfig().getDouble("silverfish.spawn-chance", 0.5);
-        dropChance  = plugin.getConfig().getDouble("silverfish.potion.drop-chance", 0.5);
-        duration   = plugin.getConfig().getInt("silverfish.potion.duration", 200);
-        lambda     = plugin.getConfig().getDouble("silverfish.potion.level-lambda", 1.0);
+        spawnChance      = plugin.getConfig().getDouble("silverfish.red-sand.spawn-chance",            0.5);
+        dropChance       = plugin.getConfig().getDouble("silverfish.red-sand.potion.drop-chance",      0.2);
+        duration         = plugin.getConfig().getInt(   "silverfish.red-sand.potion.duration",         2000);
+        lambda           = plugin.getConfig().getDouble("silverfish.red-sand.potion.level-lambda",     1.0);
+        spiceSpawnChance = plugin.getConfig().getDouble("silverfish.spice-field.spawn-chance",         0.9);
+        spiceDropChance  = plugin.getConfig().getDouble("silverfish.spice-field.potion.drop-chance",   0.5);
+        spiceDuration    = plugin.getConfig().getInt(   "silverfish.spice-field.potion.duration",      2000);
+        spiceGradeLambda = plugin.getConfig().getDouble("silverfish.spice-field.potion.level-lambda",  3.0);
+        ghastStringLambda = plugin.getConfig().getDouble("night-mobs.ghast.string-drop-lambda", 1.0);
     }
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Block block = event.getBlock();
-        if (block.getType() != Material.SAND || block.getData() != 1) return;
+        if (block.getType() != Material.SAND) return;
+        byte data = block.getData();
+        boolean isSpice = data == 0;  // white sand
+        if (!isSpice && data != 1)    return;  // not red sand either
 
         // CraftBukkit 1.8 can fire multiple dig packets for one block; deduplicate by location.
         String key = block.getWorld().getName() + block.getX() + "," + block.getY() + "," + block.getZ();
         if (!recentBreaks.add(key)) return;
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> recentBreaks.remove(key), 1L);
 
-        if (rng.nextDouble() >= spawnChance) return;
+        double chance = isSpice ? spiceSpawnChance : spawnChance;
+        if (rng.nextDouble() >= chance) return;
 
         Location loc = block.getLocation().add(0.5, 0.5, 0.5);
         Silverfish fish = (Silverfish) block.getWorld().spawnEntity(loc, EntityType.SILVERFISH);
-        fish.setMetadata(TAG, new FixedMetadataValue(plugin, true));
-        fish.addPotionEffect(
-            new PotionEffect(PotionEffectType.JUMP, Integer.MAX_VALUE, 1, false, false), true);
-        fish.addPotionEffect(
-            new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, Integer.MAX_VALUE, 3, false, false), true);
-        fish.addPotionEffect(
-                new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 2, false, false), true);
+        initSilverfish(fish, plugin);
+        if (isSpice) fish.setMetadata(SPICE_TAG, new FixedMetadataValue(plugin, true));
     }
 
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
+        if (event.getEntity().getType() == EntityType.GHAST) {
+            int count = poissonSample(ghastStringLambda);
+            if (count > 0) event.getDrops().add(new ItemStack(Material.STRING, count));
+            return;
+        }
         if (!(event.getEntity() instanceof Silverfish)) return;
         if (!event.getEntity().hasMetadata(TAG)) return;
-        if (rng.nextDouble() >= dropChance) return;
+        boolean fromField = event.getEntity().hasMetadata(SPICE_TAG);
+        if (rng.nextDouble() >= (fromField ? spiceDropChance : dropChance)) return;
 
         Location loc = event.getEntity().getLocation();
-        ItemStack potion = new ItemStack(Material.POTION);
-        PotionMeta meta = (PotionMeta) potion.getItemMeta();
-        int mark = poissonSample(lambda);
-        meta.setDisplayName(spiceName);
+        int mark = poissonSample(fromField ? spiceGradeLambda : lambda);
+        int potionDuration = fromField ? spiceDuration : duration;
 
-        meta.addCustomEffect(
-                new PotionEffect(PotionEffectType.SATURATION, duration, mark, false, false), true);
-        meta.addCustomEffect(
-                new PotionEffect(PotionEffectType.REGENERATION, duration, mark, false, false), true);
-        meta.addCustomEffect(
-                new PotionEffect(PotionEffectType.INCREASE_DAMAGE, duration, mark/2, false, false), true);
-        meta.addCustomEffect(
-                new PotionEffect(PotionEffectType.NIGHT_VISION, duration, 0, false, false), true);
-
-        meta.setLore(Collections.singletonList(ChatColor.RESET + "" + ChatColor.GRAY + "Grade: " + ChatColor.GOLD + toRoman(mark + 1)));
-        potion.setItemMeta(meta);
-        loc.getWorld().dropItemNaturally(loc, potion);
+        loc.getWorld().dropItemNaturally(loc, CustomItems.loadSpice(rng, mark, potionDuration));
     }
 
     @EventHandler
@@ -110,12 +115,12 @@ public class SilverfishSpawnListener implements Listener {
         }, 1L);
     }
 
-    private static String toRoman(int n) {
-        String[] M  = {"", "M", "MM", "MMM"};
-        String[] C  = {"", "C", "CC", "CCC", "CD", "D", "DC", "DCC", "DCCC", "CM"};
-        String[] X  = {"", "X", "XX", "XXX", "XL", "L", "LX", "LXX", "LXXX", "XC"};
-        String[] I  = {"", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"};
-        return M[n / 1000] + C[(n % 1000) / 100] + X[(n % 100) / 10] + I[n % 10];
+    static void initSilverfish(Silverfish fish, CorePlugin plugin) {
+        fish.setRemoveWhenFarAway(false);
+        fish.setMetadata(TAG, new FixedMetadataValue(plugin, true));
+        fish.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, Integer.MAX_VALUE, 1, false, false), true);
+        fish.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, Integer.MAX_VALUE, 3, false, false), true);
+        fish.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 3, false, false), true);
     }
 
     private int poissonSample(double lam) {

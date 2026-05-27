@@ -2,6 +2,11 @@ package org.coreplugin.worldgen;
 
 import org.bukkit.Chunk;
 import org.bukkit.Location;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.Chest;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.coreplugin.CustomItems;
 import org.coreplugin.RngUtils;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -53,6 +58,15 @@ public class DesertWorldGenerator extends ChunkGenerator {
     private final double   oasisDecorationDensity;
     private final double[] oasisDecorationThresholds;
     private final double[] oasisMobRates;
+    private final double   oasisCacheChance;
+    private final double   oasisCacheCellFillChance;
+    private final double[] oasisCacheItemThresholds;
+
+    private static final String[] CACHE_ITEM_KEYS = {
+        "cookies", "monomolecular-blade", "water-bucket",
+        "cow-egg", "pig-egg", "sheep-egg", "chicken-egg"
+    };
+    private static final double[] CACHE_ITEM_DEFAULTS = { 5.0, 1.0, 4.0, 2.0, 2.0, 2.0, 2.0 };
 
     private static final String[] DECORATION_KEYS = {
         "tall-grass", "fern", "dandelion", "poppy",
@@ -85,6 +99,11 @@ public class DesertWorldGenerator extends ChunkGenerator {
         new MaterialData(Material.STAINED_CLAY, (byte)  6),
         new MaterialData(Material.STAINED_CLAY, (byte) 15),
     };
+
+    // Spice fields
+    private final double spiceFieldRadius;
+    private final double spiceFieldMaxChance;
+    private final int    spiceFieldDepth;
 
     // Ore cave interior
     private final double[] oreDensities;
@@ -149,6 +168,24 @@ public class DesertWorldGenerator extends ChunkGenerator {
         oasisPondBoundaryAmplitude    = oasisCfg.getInt("pond-boundary-amplitude",   4);
         oasisClayRadius = oasisCfg.getDouble("clay-radius",              1.0);
         oasisDecorationDensity = oasisCfg.getDouble("decoration-density", 0.25);
+        oasisCacheChance           = oasisCfg.getDouble("cache-chance",            0.85);
+        oasisCacheCellFillChance   = oasisCfg.getDouble("cache-cell-fill-chance", 0.40);
+        ConfigurationSection cacheItemCfg = oasisCfg.getConfigurationSection("cache-item-weights");
+        double[] cacheItemWeights = new double[CACHE_ITEM_KEYS.length];
+        for (int i = 0; i < CACHE_ITEM_KEYS.length; i++) {
+            cacheItemWeights[i] = cacheItemCfg != null
+                ? cacheItemCfg.getDouble(CACHE_ITEM_KEYS[i], CACHE_ITEM_DEFAULTS[i])
+                : CACHE_ITEM_DEFAULTS[i];
+        }
+        double cacheItemSum = 0;
+        for (double w : cacheItemWeights) cacheItemSum += w;
+        oasisCacheItemThresholds = new double[cacheItemWeights.length];
+        double cacheItemCum = 0;
+        for (int i = 0; i < cacheItemWeights.length - 1; i++) {
+            cacheItemCum += cacheItemWeights[i] / cacheItemSum;
+            oasisCacheItemThresholds[i] = cacheItemCum;
+        }
+        oasisCacheItemThresholds[cacheItemWeights.length - 1] = 1.0;
         ConfigurationSection mobRatesCfg = oasisCfg.getConfigurationSection("mob-spawn-rates");
         oasisMobRates = new double[MOB_RATE_KEYS.length];
         for (int i = 0; i < MOB_RATE_KEYS.length; i++) {
@@ -190,6 +227,11 @@ public class DesertWorldGenerator extends ChunkGenerator {
         }
         shellClayThresholds[shellClayWeights.length - 1] = 1.0;
 
+        ConfigurationSection spiceCfg = cfg.getConfigurationSection("spice-fields");
+        spiceFieldRadius    = spiceCfg != null ? spiceCfg.getDouble("radius",             80.0) : 80.0;
+        spiceFieldMaxChance = spiceCfg != null ? spiceCfg.getDouble("max-replace-chance", 0.6)  : 0.6;
+        spiceFieldDepth     = spiceCfg != null ? spiceCfg.getInt(   "depth",              5)    : 5;
+
         ConfigurationSection oreCaveCfg = rockCfg.getConfigurationSection("ore-cave");
         ConfigurationSection densitiesCfg = oreCaveCfg.getConfigurationSection("densities");
         oreDensities = new double[]{
@@ -222,6 +264,21 @@ public class DesertWorldGenerator extends ChunkGenerator {
             double dx = wx - rock.centerX;
             double dz = wz - rock.centerZ;
             if (Math.sqrt(dx * dx + dz * dz) <= radiusFactor * rock.radius) return true;
+        }
+        return false;
+    }
+
+    public boolean isInOreCave(long seed, int wx, int wy, int wz) {
+        initIfNeeded(seed);
+        if (rockField == null) return false;
+        int chunkX = Math.floorDiv(wx, 16);
+        int chunkZ = Math.floorDiv(wz, 16);
+        for (RockSpec rock : rockField.getRocksNear(chunkX, chunkZ)) {
+            if (rock.type != FormationType.ORE_CAVE) continue;
+            double dx = wx - rock.centerX;
+            double dy = wy - rock.centerY;
+            double dz = wz - rock.centerZ;
+            if (Math.sqrt(dx * dx + dy * dy + dz * dz) <= rock.radius) return true;
         }
         return false;
     }
@@ -276,6 +333,21 @@ public class DesertWorldGenerator extends ChunkGenerator {
                 chunk.setBlock(x, 0, z, Material.BEDROCK);
                 for (int y = 1; y <= surface; y++) {
                     chunk.setBlock(x, y, z, new MaterialData(Material.SAND, (byte) 1));
+                }
+
+                double spiceFactor = rockField.getSpiceFieldFactor(worldX, worldZ, spiceFieldRadius);
+                if (spiceFactor > 0) {
+                    long colSeed = cachedSeed ^ ((long) worldX * 0xB5EE8E3FL) ^ ((long) worldZ * 0xC7537B51L);
+                    int bottom = Math.max(1, surface - spiceFieldDepth + 1);
+                    for (int y = surface; y >= bottom; y--) {
+                        int depthBelow = surface - y;
+                        double chance = spiceFieldMaxChance * spiceFactor
+                                * (1.0 - (double) depthBelow / spiceFieldDepth);
+                        long blockSeed = colSeed ^ ((long) y * 0x6C62272E07BB0142L);
+                        if (new Random(blockSeed).nextDouble() < chance) {
+                            chunk.setBlock(x, y, z, Material.SAND); // white sand
+                        }
+                    }
                 }
 
                 biome.setBiome(x, z, Biome.JUNGLE);
@@ -652,6 +724,57 @@ public class DesertWorldGenerator extends ChunkGenerator {
         }
     }
 
+    private void placeEquipmentCache(RockSpec rock, World world) {
+        long rockSeed = cachedSeed ^ ((long) rock.centerX * 0x9E3779B97F4A7C15L) ^ ((long) rock.centerZ * 0x6C62272E07BB0142L);
+        Random rng = new Random(rockSeed ^ 0x4341434845L);
+
+        if (rng.nextDouble() >= oasisCacheChance) return;
+
+        double innerRadius = rock.radius - rockShellThickness;
+        double dyC         = rock.centerY - rock.entranceY;
+        double footprintR  = Math.sqrt(Math.max(0, innerRadius * innerRadius - dyC * dyC));
+        double poolR       = footprintR * oasisPoolRadius;
+
+        double angle = rng.nextDouble() * 2.0 * Math.PI;
+        double r     = footprintR * (0.50 + rng.nextDouble() * 0.25);
+        int wx = rock.centerX + (int) (r * Math.cos(angle));
+        int wz = rock.centerZ + (int) (r * Math.sin(angle));
+
+        // Push outside pool/shore if needed
+        double horizDist   = Math.sqrt((wx - rock.centerX) * (double) (wx - rock.centerX)
+                                     + (wz - rock.centerZ) * (double) (wz - rock.centerZ));
+        double pondBn      = rockNoise.eval(wx * oasisFloorNoiseScale + 900.0, wz * oasisFloorNoiseScale + 900.0);
+        double effPoolR    = Math.max(0.5, poolR + pondBn * oasisPondBoundaryAmplitude);
+        double effSandEdge = effPoolR + oasisClayRadius;
+        if (horizDist <= effSandEdge) {
+            double pushR = effSandEdge + 2.0;
+            wx = rock.centerX + (int) (pushR * Math.cos(angle));
+            wz = rock.centerZ + (int) (pushR * Math.sin(angle));
+        }
+
+        int topScanY = rock.entranceY + oasisSlopeRise + oasisFloorNoiseAmplitude + 5;
+        int floorY   = -1;
+        for (int y = topScanY; y >= rock.entranceY; y--) {
+            Material m = world.getBlockAt(wx, y, wz).getType();
+            if (m == Material.GRASS || m == Material.DIRT || m == Material.STONE) {
+                floorY = y;
+                break;
+            }
+        }
+        if (floorY < 0) return;
+
+        int chestY = floorY + 1;
+        world.getBlockAt(wx, chestY, wz).setType(Material.CHEST);
+        BlockState state = world.getBlockAt(wx, chestY, wz).getState();
+        if (!(state instanceof Chest)) return;
+
+        Inventory inv = ((Chest) state).getBlockInventory();
+        for (ItemStack item : CustomItems.buildCacheContents(rng, oasisCacheCellFillChance, CACHE_ITEM_KEYS, oasisCacheItemThresholds)) {
+            inv.addItem(item);
+        }
+        state.update(true);
+    }
+
     private class OasisPopulator extends BlockPopulator {
         @Override
         public void populate(World world, Random random, Chunk chunk) {
@@ -664,15 +787,17 @@ public class DesertWorldGenerator extends ChunkGenerator {
                     placeCeilingGlowstone(rock, world, chunkX, chunkZ);
                     placeCeilingVines(rock, world, chunkX, chunkZ);
 
-                    // Spawn mobs once, in the chunk that contains the rock center.
-                    // Deferred to next tick so the chunk is fully tracked before entities are added.
+                    // One-per-rock actions deferred so tile entities and entities are added
+                    // after the chunk is fully tracked.
                     if (chunkX == Math.floorDiv(rock.centerX, 16) && chunkZ == Math.floorDiv(rock.centerZ, 16)) {
                         final RockSpec r = rock;
                         final long rockSeed = cachedSeed
                             ^ ((long) rock.centerX * 0x9E3779B97F4A7C15L)
                             ^ ((long) rock.centerZ * 0x6C62272E07BB0142L);
-                        plugin.getServer().getScheduler().runTask(plugin, () ->
-                            spawnOasisMobs(r, world, new Random(rockSeed ^ 0x4D4F425350574EL)));
+                        plugin.getServer().getScheduler().runTask(plugin, () -> {
+                            placeEquipmentCache(r, world);
+                            spawnOasisMobs(r, world, new Random(rockSeed ^ 0x4D4F425350574EL));
+                        });
                     }
                 }
             }

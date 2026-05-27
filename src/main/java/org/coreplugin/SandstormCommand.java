@@ -21,9 +21,9 @@ public class SandstormCommand implements CommandExecutor {
 
         if (args.length == 0 || args[0].equalsIgnoreCase("status")) {
             if (manager.isActive()) {
-                sender.sendMessage("Firestorm is ACTIVE (" + manager.getRemainingTicks() + " ticks remaining).");
+                sender.sendMessage("Solar Flare is ACTIVE (" + manager.getRemainingTicks() + " ticks remaining).");
             } else {
-                sender.sendMessage("No firestorm is active.");
+                sender.sendMessage("No Solar Flare is active.");
             }
             return true;
         }
@@ -34,29 +34,29 @@ public class SandstormCommand implements CommandExecutor {
                 try {
                     seconds = Integer.parseInt(args[1]);
                 } catch (NumberFormatException e) {
-                    sender.sendMessage("Usage: /firestorm start [seconds]");
+                    sender.sendMessage("Usage: /solarflare start [seconds]");
                     return true;
                 }
                 manager.startStorm(seconds * 20);
-                sender.sendMessage("Firestorm started for " + seconds + " seconds.");
+                sender.sendMessage("Solar Flare started for " + seconds + " seconds.");
             } else {
                 manager.startStorm();
-                sender.sendMessage("Firestorm started.");
+                sender.sendMessage("Solar Flare started.");
             }
             return true;
         }
 
         if (args[0].equalsIgnoreCase("stop")) {
             if (!manager.isActive()) {
-                sender.sendMessage("No firestorm is currently active.");
+                sender.sendMessage("No Solar Flare is currently active.");
             } else {
                 manager.stopStorm();
-                sender.sendMessage("Firestorm stopped.");
+                sender.sendMessage("Solar Flare stopped.");
             }
             return true;
         }
 
-        sender.sendMessage("Usage: /firestorm [start [seconds] | stop | status]");
+        sender.sendMessage("Usage: /solarflare [start [seconds] | stop | status]");
         return true;
     }
 }

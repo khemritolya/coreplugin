@@ -1,9 +1,16 @@
 silverfish:
-  spawn-chance: 0.5
-  potion:
-    drop-chance: 0.5
-    duration: 2000
-    level-lambda: 2.0
+  red-sand:
+    spawn-chance: 0.5
+    potion:
+      drop-chance: 0.2
+      duration: 1200
+      level-lambda: 1.0
+  spice-field:
+    spawn-chance: 0.9
+    potion:
+      drop-chance: 0.5
+      duration: 2400
+      level-lambda: 3.0
 
 night-mobs:
   check-interval: 120
@@ -12,6 +19,7 @@ night-mobs:
     chance: 0.3
     max-per-player: 3
     spawn-radius: 70
+    string-drop-lambda: 1.0
   silverfish:
     chance: 0.9
     max-per-player: 5
@@ -25,6 +33,11 @@ darkness:
 world-gen:
   min-height: 40
   max-height: 80
+
+  spice-fields:
+    radius: 20
+    max-replace-chance: 0.8
+    depth: 10
   noise:
     octaves: 3
     frequency: 0.0025
@@ -68,6 +81,16 @@ world-gen:
       pond-boundary-amplitude: 1
       clay-radius: 0.5
       decoration-density: 0.5
+      cache-chance: 0.99
+      cache-cell-fill-chance: 0.99
+      cache-item-weights:
+        cookies: 5.0
+        monomolecular-blade: 2.0
+        water-bucket: 4.0
+        cow-egg: 2.0
+        pig-egg: 2.0
+        sheep-egg: 2.0
+        chicken-egg: 2.0
       mob-spawn-rates:
         cow: 1.0
         pig: 0.5
@@ -85,6 +108,10 @@ world-gen:
         oxeye-daisy: 0.05
 
     ore-cave:
+      radiation:
+        damage-per-second: 1.0
+        check-interval: 20
+        warning-cooldown: 1200
       ore-weights:
         coal: 0.30
         iron: 0.25
@@ -101,6 +128,9 @@ world-gen:
         lapis: 0.12
         diamond: 0.10
         emerald: 0.08
+
+jungle-trees:
+  glowstone-leaf-chance: 0.05
 
 sandstorm:
   duration-min: 2400

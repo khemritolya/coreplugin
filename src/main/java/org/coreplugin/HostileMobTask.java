@@ -5,8 +5,6 @@ import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.*;
 import org.bukkit.metadata.FixedMetadataValue;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.coreplugin.worldgen.DesertWorldGenerator;
 
@@ -17,7 +15,7 @@ public class HostileMobTask extends BukkitRunnable {
 
     private static final String TAG = "dangerousCritter";
 
-    private final Coreplugin plugin;
+    private final CorePlugin plugin;
     private final SandstormManager sandstorm;
     private final double rockExclusionFactor;
     private final double ghastChance;
@@ -28,7 +26,7 @@ public class HostileMobTask extends BukkitRunnable {
     private final int silverfishSpawnRadius;
     private final Random rng = new Random();
 
-    private HostileMobTask(Coreplugin plugin, SandstormManager sandstorm) {
+    private HostileMobTask(CorePlugin plugin, SandstormManager sandstorm) {
         this.plugin = plugin;
         this.sandstorm = sandstorm;
         ConfigurationSection cfg = plugin.getConfig().getConfigurationSection("night-mobs");
@@ -106,15 +104,11 @@ public class HostileMobTask extends BukkitRunnable {
                     new Location(world, wx + 0.5, spawnY, wz + 0.5), type);
 
             if (mob instanceof Silverfish) {
-                mob.addPotionEffect(
-                        new PotionEffect(PotionEffectType.JUMP, Integer.MAX_VALUE, 1, false, false), true);
-                mob.addPotionEffect(
-                        new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, Integer.MAX_VALUE, 3, false, false), true);
-                mob.addPotionEffect(
-                        new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 2, false, false), true);
+                SilverfishSpawnListener.initSilverfish((Silverfish) mob, plugin);
+            } else {
+                mob.setRemoveWhenFarAway(false);
+                mob.setMetadata(TAG, new FixedMetadataValue(plugin, true));
             }
-
-            mob.setMetadata(TAG, new FixedMetadataValue(plugin, true));
             return;
         }
     }
@@ -127,7 +121,7 @@ public class HostileMobTask extends BukkitRunnable {
         return count;
     }
 
-    public static void register(Coreplugin plugin, SandstormManager sandstorm) {
+    public static void register(CorePlugin plugin, SandstormManager sandstorm) {
         long interval = plugin.getConfig().getLong("night-mobs.check-interval", 40L);
         new HostileMobTask(plugin, sandstorm).runTaskTimer(plugin, 0L, interval);
     }

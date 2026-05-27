@@ -14,7 +14,7 @@ import java.util.Random;
 
 public class SandstormManager extends BukkitRunnable {
 
-    private final Coreplugin plugin;
+    private final CorePlugin plugin;
     private final int durationMin;
     private final int durationMax;
     private final int checkInterval;
@@ -30,7 +30,7 @@ public class SandstormManager extends BukkitRunnable {
     private long pendingTicks = 0;
     private long damageAccumulator = 0;
 
-    private SandstormManager(Coreplugin plugin) {
+    private SandstormManager(CorePlugin plugin) {
         this.plugin = plugin;
         ConfigurationSection cfg = plugin.getConfig().getConfigurationSection("sandstorm");
         durationMin    = cfg.getInt("duration-min", 2400);
@@ -43,7 +43,7 @@ public class SandstormManager extends BukkitRunnable {
         warningTicks         = cfg.getInt("warning-ticks", 1200);
     }
 
-    public static SandstormManager register(Coreplugin plugin) {
+    public static SandstormManager register(CorePlugin plugin) {
         SandstormManager manager = new SandstormManager(plugin);
         manager.runTaskTimer(plugin, 0L, manager.checkInterval);
         return manager;
@@ -57,7 +57,7 @@ public class SandstormManager extends BukkitRunnable {
                 if (pendingTicks <= 0) startStorm();
             } else if (rng.nextDouble() < (double) checkInterval / meanArrivalInterval) {
                 pendingTicks = warningTicks;
-                JoinListener.satSend("Warning! Firestorm approaching!", plugin);
+                JoinListener.satSend("Warning! Solar Flare in 1 minute!", plugin);
             }
             return;
         }
@@ -112,7 +112,7 @@ public class SandstormManager extends BukkitRunnable {
         active = true;
         remainingTicks = durationTicks;
         damageAccumulator = 0;
-        JoinListener.satSend("Severe Danger! Firestorm Imminent!", plugin);
+        JoinListener.satSend("Danger! Solar Flare!", plugin);
     }
 
     public void stopStorm() {
@@ -121,7 +121,7 @@ public class SandstormManager extends BukkitRunnable {
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.resetPlayerWeather();
         }
-        JoinListener.satSend("All clear! Firestorm is dissipated!", plugin);
+        JoinListener.satSend("Solar Flare dissipated.", plugin);
     }
 
     public boolean isActive() {

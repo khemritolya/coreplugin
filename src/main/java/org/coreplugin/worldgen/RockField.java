@@ -83,6 +83,23 @@ public class RockField {
         return null;
     }
 
+    /**
+     * Returns a [0,1] factor for spice-field intensity at a world position.
+     * 0 means the column is inside a rock-bearing cell (or outside the falloff radius).
+     * Peaks at 1 at the centre of cells that have no rock.
+     */
+    public double getSpiceFieldFactor(int worldX, int worldZ, double radius) {
+        int cellX = Math.floorDiv(worldX, cellSize);
+        int cellZ = Math.floorDiv(worldZ, cellSize);
+        if (getRockInCell(cellX, cellZ) != null) return 0.0;
+        double cx = cellX * cellSize + cellSize * 0.5;
+        double cz = cellZ * cellSize + cellSize * 0.5;
+        double dx = worldX - cx;
+        double dz = worldZ - cz;
+        double dist = Math.sqrt(dx * dx + dz * dz);
+        return Math.max(0.0, 1.0 - dist / radius);
+    }
+
     private RockSpec getRockInCell(int cellX, int cellZ) {
         long hash = seed
             ^ (long) cellX * 0x9E3779B97F4A7C15L

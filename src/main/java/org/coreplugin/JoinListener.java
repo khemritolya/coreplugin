@@ -19,9 +19,10 @@ import java.util.Random;
 
 public class JoinListener implements Listener {
 
-    private final Coreplugin plugin;
+    private final CorePlugin plugin;
+    private static List<String> cachedCrimes = null;
 
-    public JoinListener(Coreplugin plugin) {
+    public JoinListener(CorePlugin plugin) {
         this.plugin = plugin;
     }
 
@@ -35,7 +36,7 @@ public class JoinListener implements Listener {
             if (plugin.isGeneratorWorld(player.getWorld().getName())) {
                 player.teleport(player.getWorld().getSpawnLocation());
             }
-            ItemStack book = WelcomeItems.loadBook(plugin, player);
+            ItemStack book = CustomItems.loadBook(plugin, player);
             if (book != null) {
                 player.getInventory().addItem(book);
             }
@@ -43,35 +44,36 @@ public class JoinListener implements Listener {
             ItemStack bed = new ItemStack(Material.BED);
             player.getInventory().addItem(bed);
 
-            ItemStack food = WelcomeItems.loadFood(plugin, player);
+            ItemStack food = CustomItems.loadCookies(5);
             player.getInventory().addItem(food);
         }
 
         satSend("Detected Exile Biosignature!", plugin);
-        satSend("Nickname: " + ChatColor.RED + player.getName() + ChatColor.RESET, plugin);
+        satSend("Nickname: " + player.getName(), plugin);
         satSend("Crime: " + ChatColor.RED + getCrime(plugin, player), plugin);
     }
 
     public static void satSend(String text, Plugin plugin) {
-        String newMessage = "<" +ChatColor.GOLD + "Satellite" + ChatColor.RESET + "> " + text;
+        String newMessage = "<satellite> " + text;
         plugin.getServer().broadcastMessage(newMessage);
     }
 
     public static String getCrime(Plugin plugin, Player p) {
-        File f = new File(plugin.getDataFolder(), "crimes.txt");
-        List<String> crimes;
-        try {
-            crimes = Files.readAllLines(f.toPath());
-            crimes.removeIf(s -> s.trim().isEmpty());
-        } catch (IOException e) {
-            plugin.getLogger().warning("Could not read crimes.txt: " + e.getMessage());
-            crimes = Collections.singletonList("Treason against the Emperor");
+        if (cachedCrimes == null) {
+            File f = new File(plugin.getDataFolder(), "crimes.txt");
+            try {
+                List<String> lines = Files.readAllLines(f.toPath());
+                lines.removeIf(s -> s.trim().isEmpty());
+                cachedCrimes = lines;
+            } catch (IOException e) {
+                plugin.getLogger().warning("Could not read crimes.txt: " + e.getMessage());
+                cachedCrimes = Collections.singletonList("Treason against the Emperor");
+            }
         }
-        if (crimes.isEmpty()) return "Treason against the Emperor";
+        if (cachedCrimes.isEmpty()) return "Treason against the Emperor";
 
-        long seed = p.getUniqueId().getMostSignificantBits() ^ p.getUniqueId().getLeastSignificantBits();
-//        return crimes.get(crimes.size() - 1);
-        return crimes.get(new Random(seed).nextInt(crimes.size()));
+        long seed = p.getUniqueId().getMostSignificantBits() ^ p.getUniqueId().getLeastSignificantBits() ^ p.getWorld().getSeed();
+        return cachedCrimes.get(new Random(seed).nextInt(cachedCrimes.size()));
     }
 
     @EventHandler

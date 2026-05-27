@@ -29,8 +29,7 @@ public class FoodListener implements Listener {
         if (lore == null || !lore.contains(SLOP_LORE_LINE)) return;
 
         Player player = event.getPlayer();
-        // 20 ticks per second: nausea 10s = 200 ticks, saturation 3s = 60 ticks
         player.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION, 200, 0), true);
-        player.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, 60, 0), true);
+        player.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, 10, 0), true);
     }
 }

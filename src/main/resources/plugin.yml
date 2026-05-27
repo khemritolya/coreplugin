@@ -1,10 +1,10 @@
 name: coreplugin
 version: '${version}'
 
-main: org.coreplugin.Coreplugin
+main: org.coreplugin.CorePlugin
 load: STARTUP
 
 commands:
-  firestorm:
-    description: Control sandstorms
-    usage: /firestorm [start [seconds] | stop | status]
+  solarflare:
+    description: Control solar flares
+    usage: /solarflare [start [seconds] | stop | status]

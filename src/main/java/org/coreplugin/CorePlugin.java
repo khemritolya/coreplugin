@@ -8,7 +8,7 @@ import org.coreplugin.worldgen.DesertWorldGenerator;
 import java.util.HashSet;
 import java.util.Set;
 
-public final class Coreplugin extends JavaPlugin {
+public final class CorePlugin extends JavaPlugin {
 
     DesertWorldGenerator generator;
     private final Set<String> generatorWorldNames = new HashSet<>();
@@ -25,14 +25,19 @@ public final class Coreplugin extends JavaPlugin {
         saveResource("crimes.txt", false);
         sandstorm = SandstormManager.register(this);
         getServer().getPluginManager().registerEvents(new JoinListener(this), this);
+        getServer().getPluginManager().registerEvents(new BedSpawnListener(), this);
+        getServer().getPluginManager().registerEvents(new GhastSoundListener(), this);
         getServer().getPluginManager().registerEvents(new SilverfishSpawnListener(this), this);
         getServer().getPluginManager().registerEvents(new MobSpawnListener(), this);
-        getServer().getPluginManager().registerEvents(new HostileMobListener(), this);
+        getServer().getPluginManager().registerEvents(new MobListener(this), this);
         getServer().getPluginManager().registerEvents(new WeatherListener(sandstorm), this);
         getServer().getPluginManager().registerEvents(new FoodListener(), this);
+        double glowstoneChance = getConfig().getDouble("jungle-trees.glowstone-leaf-chance", 0.05);
+        getServer().getPluginManager().registerEvents(new JungleTreeListener(glowstoneChance), this);
         HostileMobTask.register(this, sandstorm);
+        OreCaveDamageTask.register(this);
         DarknessListener.register(this);
-        getCommand("firestorm").setExecutor(new SandstormCommand(sandstorm));
+        getCommand("solarflare").setExecutor(new SandstormCommand(sandstorm));
 
         // Main world is already loaded before onEnable on CraftBukkit 1.8;
         // set spawn now for any matching world that is already up.

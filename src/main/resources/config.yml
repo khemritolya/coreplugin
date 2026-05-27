@@ -4,12 +4,12 @@ silverfish:
     potion:
       drop-chance: 0.2
       duration: 1200
-      level-lambda: 1.0
+      level-lambda: 0.5
   spice-field:
     spawn-chance: 0.9
     potion:
-      drop-chance: 0.5
-      duration: 2400
+      drop-chance: 0.75
+      duration: 3600
       level-lambda: 3.0
 
 night-mobs:
@@ -85,7 +85,9 @@ world-gen:
       cache-cell-fill-chance: 0.99
       cache-item-weights:
         cookies: 5.0
-        monomolecular-blade: 2.0
+        hard-hat: 10.0
+        prospector-pickaxe: 10.0
+        monomolecular-blade: 1.0
         water-bucket: 4.0
         cow-egg: 2.0
         pig-egg: 2.0
@@ -131,6 +133,9 @@ world-gen:
 
 jungle-trees:
   glowstone-leaf-chance: 0.05
+
+prospector-pickaxe:
+  explosion-power: 4.0
 
 sandstorm:
   duration-min: 2400

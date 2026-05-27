@@ -63,10 +63,10 @@ public class DesertWorldGenerator extends ChunkGenerator {
     private final double[] oasisCacheItemThresholds;
 
     private static final String[] CACHE_ITEM_KEYS = {
-        "cookies", "monomolecular-blade", "water-bucket",
+        "cookies", "hard-hat", "prospector-pickaxe", "monomolecular-blade", "water-bucket",
         "cow-egg", "pig-egg", "sheep-egg", "chicken-egg"
     };
-    private static final double[] CACHE_ITEM_DEFAULTS = { 5.0, 1.0, 4.0, 2.0, 2.0, 2.0, 2.0 };
+    private static final double[] CACHE_ITEM_DEFAULTS = { 5.0, 10.0, 10.0, 1.0, 4.0, 2.0, 2.0, 2.0, 2.0 };
 
     private static final String[] DECORATION_KEYS = {
         "tall-grass", "fern", "dandelion", "poppy",
@@ -517,9 +517,9 @@ public class DesertWorldGenerator extends ChunkGenerator {
 
     private void fillOreCave(RockSpec rock, ChunkData chunk, int chunkX, int chunkZ) {
         long rockSeed = cachedSeed ^ ((long) rock.centerX * 0x9E3779B97F4A7C15L) ^ ((long) rock.centerZ * 0x6C62272E07BB0142L);
-        double innerRadius = rock.radius - rockShellThickness;
-        double density     = oreDensity(rock.oreType);
-        int ir = (int) innerRadius;
+        double density    = oreDensity(rock.oreType);
+        int    totalMargin = (int) Math.ceil(rockDeformStrength);
+        int    ir          = rock.radius - rockShellThickness + totalMargin;
 
         int minX = Math.max(0,   rock.centerX - ir - chunkX * 16);
         int maxX = Math.min(15,  rock.centerX + ir - chunkX * 16);
@@ -538,7 +538,13 @@ public class DesertWorldGenerator extends ChunkGenerator {
                     int dz = wz - rock.centerZ;
                     double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
-                    if (dist >= innerRadius) continue;
+                    double s      = rockDeformScale;
+                    double deform = (rockNoise.eval(wx * s, y  * s)
+                                   + rockNoise.eval(y  * s, wz * s)
+                                   + rockNoise.eval(wx * s, wz * s)) / 3.0;
+                    double effectiveInner = rock.radius - rockShellThickness + deform * rockDeformStrength;
+
+                    if (dist >= effectiveInner) continue;
 
                     long blockSeed = rockSeed ^ ((long) wx * 397L) ^ ((long) y * 1031L) ^ ((long) wz * 587L);
                     Random blockRng = new Random(blockSeed);

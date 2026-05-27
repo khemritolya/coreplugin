@@ -3,6 +3,7 @@ package org.coreplugin;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.coreplugin.worldgen.DesertWorldGenerator;
@@ -29,18 +30,21 @@ public class OreCaveDamageTask extends BukkitRunnable {
         DesertWorldGenerator generator = plugin.getGenerator();
         for (World world : plugin.getServer().getWorlds()) {
             if (!plugin.isGeneratorWorld(world.getName())) continue;
-            for (Player player : world.getPlayers()) {
-                Location loc = player.getLocation();
+            for (LivingEntity entity : world.getLivingEntities()) {
+                Location loc = entity.getLocation();
                 if (generator == null || !generator.isInOreCave(
                         world.getSeed(), loc.getBlockX(), loc.getBlockY(), loc.getBlockZ())) continue;
 
-                long now = System.currentTimeMillis();
-                Long last = lastWarnedMs.get(player.getUniqueId());
-                if (last == null || now - last >= warningCooldownMs) {
-                    player.sendMessage("Danger! The rock is emitting radiation above safety threshold!");
-                    lastWarnedMs.put(player.getUniqueId(), now);
+                if (entity instanceof Player) {
+                    Player player = (Player) entity;
+                    long now = System.currentTimeMillis();
+                    Long last = lastWarnedMs.get(player.getUniqueId());
+                    if (last == null || now - last >= warningCooldownMs) {
+                        player.sendMessage("Danger! The rock is emitting radiation above safety threshold!");
+                        lastWarnedMs.put(player.getUniqueId(), now);
+                    }
                 }
-                player.damage(damagePerInterval);
+                entity.damage(damagePerInterval);
             }
         }
     }

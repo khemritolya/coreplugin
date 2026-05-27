@@ -14,24 +14,19 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
-
-import static org.coreplugin.RngUtils.poissonSample;
 
 public class SilverfishSpawnListener implements Listener {
 
     private static final String TAG       = "dangerousCritter";
     private static final String SPICE_TAG = "fieldCritter";
-    public static final String spiceName = ChatColor.RESET + "" + ChatColor.BLUE + "Nacre";
-
+    
     private final CorePlugin plugin;
     private final double spawnChance;
     private final double dropChance;
@@ -42,24 +37,38 @@ public class SilverfishSpawnListener implements Listener {
     private final int    spiceDuration;
     private final double spiceGradeLambda;
     private final double ghastStringLambda;
+    private final float  prospectorExplosionPower;
     private final Random rng = new Random();
     private final Set<String> recentBreaks = new HashSet<>();
 
     public SilverfishSpawnListener(CorePlugin plugin) {
         this.plugin = plugin;
-        spawnChance      = plugin.getConfig().getDouble("silverfish.red-sand.spawn-chance",            0.5);
-        dropChance       = plugin.getConfig().getDouble("silverfish.red-sand.potion.drop-chance",      0.2);
-        duration         = plugin.getConfig().getInt(   "silverfish.red-sand.potion.duration",         2000);
-        lambda           = plugin.getConfig().getDouble("silverfish.red-sand.potion.level-lambda",     1.0);
-        spiceSpawnChance = plugin.getConfig().getDouble("silverfish.spice-field.spawn-chance",         0.9);
-        spiceDropChance  = plugin.getConfig().getDouble("silverfish.spice-field.potion.drop-chance",   0.5);
-        spiceDuration    = plugin.getConfig().getInt(   "silverfish.spice-field.potion.duration",      2000);
-        spiceGradeLambda = plugin.getConfig().getDouble("silverfish.spice-field.potion.level-lambda",  3.0);
-        ghastStringLambda = plugin.getConfig().getDouble("night-mobs.ghast.string-drop-lambda", 1.0);
+        spawnChance              = plugin.getConfig().getDouble("silverfish.red-sand.spawn-chance",            0.5);
+        dropChance               = plugin.getConfig().getDouble("silverfish.red-sand.potion.drop-chance",      0.2);
+        duration                 = plugin.getConfig().getInt(   "silverfish.red-sand.potion.duration",         2000);
+        lambda                   = plugin.getConfig().getDouble("silverfish.red-sand.potion.level-lambda",     1.0);
+        spiceSpawnChance         = plugin.getConfig().getDouble("silverfish.spice-field.spawn-chance",         0.9);
+        spiceDropChance          = plugin.getConfig().getDouble("silverfish.spice-field.potion.drop-chance",   0.5);
+        spiceDuration            = plugin.getConfig().getInt(   "silverfish.spice-field.potion.duration",      2000);
+        spiceGradeLambda         = plugin.getConfig().getDouble("silverfish.spice-field.potion.level-lambda",  3.0);
+        ghastStringLambda        = plugin.getConfig().getDouble("night-mobs.ghast.string-drop-lambda",         1.0);
+        prospectorExplosionPower = (float) plugin.getConfig().getDouble("prospector-pickaxe.explosion-power",  2.0);
     }
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
+        ItemStack held = event.getPlayer().getItemInHand();
+        if (held != null && held.getType() == Material.IRON_PICKAXE) {
+            ItemMeta heldMeta = held.getItemMeta();
+            if (heldMeta != null && heldMeta.hasDisplayName()
+                    && heldMeta.getDisplayName().equals(CustomItems.PROSPECTOR_NAME)) {
+                Location loc = event.getBlock().getLocation().add(0.5, 0.5, 0.5);
+                plugin.getServer().getScheduler().runTask(plugin, () ->
+                        loc.getWorld().createExplosion(loc.getX(), loc.getY(), loc.getZ(),
+                                prospectorExplosionPower, false, true));
+            }
+        }
+
         Block block = event.getBlock();
         if (block.getType() != Material.SAND) return;
         byte data = block.getData();
@@ -94,9 +103,11 @@ public class SilverfishSpawnListener implements Listener {
 
         Location loc = event.getEntity().getLocation();
         int mark = poissonSample(fromField ? spiceGradeLambda : lambda);
-        int potionDuration = fromField ? spiceDuration : duration;
+        int d = fromField ? spiceDuration : duration;
+        double bonus = rng.nextDouble() + rng.nextDouble() + rng.nextDouble() + rng.nextDouble() + rng.nextDouble();
+        int potionDuration = (int) (d * (0.75 + bonus * 0.1));
 
-        loc.getWorld().dropItemNaturally(loc, CustomItems.loadSpice(rng, mark, potionDuration));
+        loc.getWorld().dropItemNaturally(loc, CustomItems.loadSpice(mark, potionDuration));
     }
 
     @EventHandler
@@ -104,7 +115,7 @@ public class SilverfishSpawnListener implements Listener {
         ItemStack item = event.getItem();
         if (item.getType() != Material.POTION) return;
         ItemMeta meta = item.getItemMeta();
-        if (meta == null || !meta.getDisplayName().equals(spiceName)) return;
+        if (meta == null || !meta.getDisplayName().equals(CustomItems.SPICE_NAME)) return;
 
         Player player = event.getPlayer();
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {

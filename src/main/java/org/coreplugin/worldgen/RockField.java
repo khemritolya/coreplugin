@@ -108,8 +108,9 @@ public class RockField {
 
         if (rng.nextDouble() > spawnChance) return null;
 
-        int rockX = cellX * cellSize + rng.nextInt(cellSize);
-        int rockZ = cellZ * cellSize + rng.nextInt(cellSize);
+        int inner = cellSize - 2 * radius;
+        int rockX = cellX * cellSize + radius + (inner > 0 ? rng.nextInt(inner) : 0);
+        int rockZ = cellZ * cellSize + radius + (inner > 0 ? rng.nextInt(inner) : 0);
 
         double noiseVal = noise.evaluate(rockX, rockZ);
         int surface = minHeight + (int) ((noiseVal + 1.0) / 2.0 * (maxHeight - minHeight));

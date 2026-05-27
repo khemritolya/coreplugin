@@ -26,11 +26,16 @@ import static org.coreplugin.RngUtils.poissonSample;
 
 public class CustomItems {
 
-    public static ItemStack loadSpice(Random rng, int mark, int duration) {
+    public static final String SPICE_NAME              = ChatColor.RESET + "" + ChatColor.BLUE    + "Nacre";
+    public static final String MONOMOLECULAR_BLADE_NAME = ChatColor.RESET + "" + ChatColor.DARK_RED + "Monomolecular Blade";
+    public static final String PROSPECTOR_NAME         = ChatColor.RESET + "" + ChatColor.DARK_RED + "Prospector's Pickaxe";
+    public static final String HARD_HAT_NAME           = ChatColor.RESET + "" + ChatColor.DARK_RED    + "Hard Hat";
+
+    public static ItemStack loadSpice(int mark, int duration) {
         ItemStack potion = new ItemStack(Material.POTION);
         PotionMeta meta = (PotionMeta) potion.getItemMeta();
 
-        meta.setDisplayName(SilverfishSpawnListener.spiceName);
+        meta.setDisplayName(SPICE_NAME);
 
         meta.addCustomEffect(
                 new PotionEffect(PotionEffectType.SATURATION,     duration, mark,   false, false), true);
@@ -41,7 +46,8 @@ public class CustomItems {
         meta.addCustomEffect(
                 new PotionEffect(PotionEffectType.NIGHT_VISION,   duration, 0,      false, false), true);
 
-        meta.setLore(Collections.singletonList(ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Grade: " + ChatColor.GOLD + toRoman(mark + 1)));
+        meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Length: " + ChatColor.AQUA + duration / 20 + "s",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Grade: " + ChatColor.GOLD + toRoman(mark + 1)));
         potion.setItemMeta(meta);
         return potion;
     }
@@ -63,15 +69,38 @@ public class CustomItems {
         return gloop;
     }
 
-    public static ItemStack loadMonomolecularBlade(int durability) {
+    public static ItemStack loadHardHat() {
+        ItemStack helmet = new ItemStack(Material.GOLD_HELMET);
+        ItemMeta meta = helmet.getItemMeta();
+        meta.setDisplayName(HARD_HAT_NAME);
+        meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by Amakuni Concern",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Your Safety, Our Priority™"));
+        helmet.setItemMeta(meta);
+        helmet.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 10);
+        helmet.addUnsafeEnchantment(Enchantment.DURABILITY, 2);
+        return helmet;
+    }
+
+    public static ItemStack loadProspectorPickaxe() {
+        ItemStack pick = new ItemStack(Material.IRON_PICKAXE);
+        ItemMeta meta = pick.getItemMeta();
+        meta.setDisplayName(PROSPECTOR_NAME);
+        meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by Amakuni Concern",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Hard Hat Required"));
+        pick.setItemMeta(meta);
+        return pick;
+    }
+
+    public static ItemStack loadMonomolecularBlade() {
         ItemStack sword = new ItemStack(Material.DIAMOND_SWORD);
         ItemMeta meta = sword.getItemMeta();
-        meta.setDisplayName(ChatColor.RESET + "" + ChatColor.DARK_RED + "Monomolecular Blade");
+        meta.setDisplayName(MONOMOLECULAR_BLADE_NAME);
         meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by Amakuni Concern",
-                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Arming the Empire™"));
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "May Shatter Spontaneously"));
         sword.setItemMeta(meta);
         sword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
-        sword.setDurability((short) (1561 - Math.min(durability, 1551)));
+        sword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
+        sword.setDurability((short) (Short.MAX_VALUE - 1));
         return sword;
     }
 
@@ -84,7 +113,7 @@ public class CustomItems {
         ItemMeta meta = egg.getItemMeta();
         meta.setDisplayName(ChatColor.RESET + "Bioassembler");
         meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by Nisso Biochem",
-                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Spawns: " + ChatColor.DARK_BLUE + "Cow"));
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Spawns: " + ChatColor.GREEN + "Cow"));
         egg.setItemMeta(meta);
         return egg;
     }
@@ -94,7 +123,7 @@ public class CustomItems {
         ItemMeta meta = egg.getItemMeta();
         meta.setDisplayName(ChatColor.RESET + "Bioassembler");
         meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by Nisso Biochem",
-                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Spawns: " + ChatColor.DARK_BLUE + "Pig"));
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Spawns: " + ChatColor.GREEN + "Pig"));
         egg.setItemMeta(meta);
         return egg;
     }
@@ -104,7 +133,7 @@ public class CustomItems {
         ItemMeta meta = egg.getItemMeta();
         meta.setDisplayName(ChatColor.RESET + "Bioassembler");
         meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by Nisso Biochem",
-                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Spawns: " + ChatColor.DARK_BLUE + "Sheep"));
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Spawns: " + ChatColor.GREEN + "Sheep"));
         egg.setItemMeta(meta);
         return egg;
     }
@@ -114,12 +143,12 @@ public class CustomItems {
         ItemMeta meta = egg.getItemMeta();
         meta.setDisplayName(ChatColor.RESET + "Bioassembler");
         meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by Nisso Biochem",
-                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Spawns: " + ChatColor.DARK_BLUE + "Chicken"));
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Spawns: " + ChatColor.GREEN + "Chicken"));
         egg.setItemMeta(meta);
         return egg;
     }
 
-    private static final int CHEST_SLOTS = 27;
+    private static final int CHEST_SLOTS = 20;
 
     public static List<ItemStack> buildCacheContents(Random rng, double cellFillChance,
                                                      String[] itemKeys, double[] itemThresholds) {
@@ -141,7 +170,9 @@ public class CustomItems {
     private static ItemStack resolveItem(String key, Random rng) {
         switch (key) {
             case "cookies":             return loadCookies(poissonSample(rng, 1) + 1);
-            case "monomolecular-blade": return loadMonomolecularBlade(poissonSample(rng, 50));
+            case "hard-hat":            return loadHardHat();
+            case "prospector-pickaxe":  return loadProspectorPickaxe();
+            case "monomolecular-blade": return loadMonomolecularBlade();
             case "water-bucket":        return loadWaterBucket();
             case "cow-egg":             return loadCowEgg();
             case "pig-egg":             return loadPigEgg();

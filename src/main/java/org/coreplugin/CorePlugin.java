@@ -32,6 +32,7 @@ public final class CorePlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new MobListener(this), this);
         getServer().getPluginManager().registerEvents(new WeatherListener(sandstorm), this);
         getServer().getPluginManager().registerEvents(new FoodListener(), this);
+        getServer().getPluginManager().registerEvents(new AnvilListener(), this);
         double glowstoneChance = getConfig().getDouble("jungle-trees.glowstone-leaf-chance", 0.05);
         getServer().getPluginManager().registerEvents(new JungleTreeListener(glowstoneChance), this);
         HostileMobTask.register(this, sandstorm);

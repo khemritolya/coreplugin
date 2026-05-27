@@ -14,6 +14,10 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import net.minecraft.server.v1_8_R3.NBTTagCompound;
+import net.minecraft.server.v1_8_R3.NBTTagList;
+import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -106,7 +110,22 @@ public class CustomItems {
         sword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
         sword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
         sword.setDurability((short) (Short.MAX_VALUE - 1));
-        return sword;
+
+        net.minecraft.server.v1_8_R3.ItemStack nmsStack = CraftItemStack.asNMSCopy(sword);
+        NBTTagCompound tag = nmsStack.hasTag() ? nmsStack.getTag() : new NBTTagCompound();
+        NBTTagList modifiers = new NBTTagList();
+        NBTTagCompound dmg = new NBTTagCompound();
+        dmg.setString("AttributeName", "generic.attackDamage");
+        dmg.setString("Name", "generic.attackDamage");
+        dmg.setDouble("Amount", 9001.0);
+        dmg.setInt("Operation", 0);
+        dmg.setLong("UUIDMost", 894654L);
+        dmg.setLong("UUIDLeast", 2872L);
+        dmg.setString("Slot", "mainhand");
+        modifiers.add(dmg);
+        tag.set("AttributeModifiers", modifiers);
+        nmsStack.setTag(tag);
+        return CraftItemStack.asBukkitCopy(nmsStack);
     }
 
     public static ItemStack loadSpeedBoots() {

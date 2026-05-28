@@ -6,6 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -29,7 +30,9 @@ public class JoinListener implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
+        event.setJoinMessage(null);
         Player player = event.getPlayer();
+        player.setGameMode(org.bukkit.GameMode.SURVIVAL);
 
         // CraftBukkit 1.8 calls getHighestBlockYAt() for first-time players, landing them
         // on top of the dome shell. Force-teleport to the exact stored spawn instead.
@@ -51,7 +54,7 @@ public class JoinListener implements Listener {
         }
 
         satSend("Detected Exile Biosignature!", plugin);
-        satSend("Nickname: " + player.getName(), plugin);
+        satSend("Nickname: " + ChatColor.AQUA + player.getName(), plugin);
         satSend("Crime: " + ChatColor.RED + getCrime(plugin, player), plugin);
     }
 
@@ -76,6 +79,14 @@ public class JoinListener implements Listener {
 
         long seed = p.getUniqueId().getMostSignificantBits() ^ p.getUniqueId().getLeastSignificantBits() ^ p.getWorld().getSeed();
         return cachedCrimes.get(new Random(seed).nextInt(cachedCrimes.size()));
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        event.setQuitMessage(null);
+        Player player = event.getPlayer();
+        satSend("Exile Biosignature Tracking Lost!", plugin);
+        satSend("Nickname: " + ChatColor.AQUA + player.getName(), plugin);
     }
 
     @EventHandler

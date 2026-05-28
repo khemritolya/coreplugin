@@ -6,7 +6,9 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.FireworkEffect;
 import org.bukkit.inventory.meta.BookMeta;
+import org.bukkit.inventory.meta.FireworkEffectMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.PotionMeta;
@@ -32,12 +34,17 @@ import static org.coreplugin.RngUtils.poissonSample;
 public class CustomItems {
 
     public static final String SPICE_NAME              = ChatColor.RESET + "" + ChatColor.BLUE + "Nacre";
+
     public static final String MONOMOLECULAR_BLADE_NAME = ChatColor.RESET + "" + ChatColor.DARK_RED + "Monomolecular Blade";
     public static final String PROSPECTOR_NAME         = ChatColor.RESET + "" + ChatColor.DARK_RED + "Prospector's Pickaxe";
     public static final String HARD_HAT_NAME           = ChatColor.RESET + "" + ChatColor.DARK_RED + "Hard Hat";
-    public static final String SPEED_BOOTS_NAME        = ChatColor.RESET + "" + ChatColor.DARK_RED + "QuantumSuit Boots";
+    public static final String IMPERIAL_TACHI_NAME     = ChatColor.RESET + "" + ChatColor.DARK_RED + "Imperial Tachi";
+
+    public static final String SPEED_BOOTS_NAME        = ChatColor.RESET + "" + ChatColor.AQUA + "QuantumSuit Boots";
+    public static final String PHASE_DEVICE_NAME       = ChatColor.RESET + "" + ChatColor.DARK_PURPLE + "Phase Device";
     public static final String PLASMA_CHARGE_NAME      = ChatColor.RESET + "" + ChatColor.AQUA + "Plasma Charge";
-    private static final int CHEST_SLOTS = 27;
+
+    private static final int CHEST_SLOTS = 50;
 
     public static ItemStack loadSpice(int mark, int duration) {
         ItemStack potion = new ItemStack(Material.POTION);
@@ -85,7 +92,7 @@ public class CustomItems {
                 ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Your Safety, Our Priority™"));
         helmet.setItemMeta(meta);
         helmet.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 10);
-        helmet.addUnsafeEnchantment(Enchantment.DURABILITY, 2);
+        helmet.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
         return helmet;
     }
 
@@ -107,7 +114,6 @@ public class CustomItems {
         meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by Amakuni Concern",
                 ChatColor.RESET + "" + ChatColor.DARK_GRAY + "May Shatter Spontaneously"));
         sword.setItemMeta(meta);
-        sword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
         sword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
         sword.setDurability((short) (Short.MAX_VALUE - 1));
 
@@ -128,16 +134,66 @@ public class CustomItems {
         return CraftItemStack.asBukkitCopy(nmsStack);
     }
 
+    public static ItemStack loadImperialTachi() {
+        ItemStack sword = new ItemStack(Material.IRON_SWORD);
+        ItemMeta meta = sword.getItemMeta();
+        meta.setDisplayName(IMPERIAL_TACHI_NAME);
+        meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by Amakuni Concern",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "A Civilized Weapon"));
+        sword.setItemMeta(meta);
+
+        net.minecraft.server.v1_8_R3.ItemStack nmsStack = CraftItemStack.asNMSCopy(sword);
+        NBTTagCompound tag = nmsStack.hasTag() ? nmsStack.getTag() : new NBTTagCompound();
+        tag.setByte("Unbreakable", (byte) 1);
+        nmsStack.setTag(tag);
+        return CraftItemStack.asBukkitCopy(nmsStack);
+    }
+
+    public static ItemStack loadPhaseDevice() {
+        ItemStack charge = new ItemStack(Material.FIREWORK_CHARGE);
+        FireworkEffectMeta meta = (FireworkEffectMeta) charge.getItemMeta();
+        meta.setDisplayName(PHASE_DEVICE_NAME);
+        meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by Imperial High-Energy Lab",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Arcane Reality-Bending Bauble"));
+        meta.setEffect(FireworkEffect.builder().withColor(org.bukkit.Color.PURPLE).build());
+        charge.setItemMeta(meta);
+        charge.addUnsafeEnchantment(Enchantment.ARROW_INFINITE, 10);
+
+        java.util.UUID id = java.util.UUID.randomUUID();
+        net.minecraft.server.v1_8_R3.ItemStack nmsStack = CraftItemStack.asNMSCopy(charge);
+        NBTTagCompound tag = nmsStack.hasTag() ? nmsStack.getTag() : new NBTTagCompound();
+        tag.setLong("PhaseIdMost",  id.getMostSignificantBits());
+        tag.setLong("PhaseIdLeast", id.getLeastSignificantBits());
+        tag.setLong("PhaseReadyAt", 0L);
+        nmsStack.setTag(tag);
+        return CraftItemStack.asBukkitCopy(nmsStack);
+    }
+
+    private static final Material[] MUSIC_DISCS = {
+        Material.GOLD_RECORD, Material.GREEN_RECORD, Material.RECORD_3,  Material.RECORD_4,
+        Material.RECORD_5,    Material.RECORD_6,     Material.RECORD_7,  Material.RECORD_8,
+        Material.RECORD_9,    Material.RECORD_10,    Material.RECORD_11, Material.RECORD_12
+    };
+
+    public static ItemStack loadMusicDisc(Random rng) {
+        return new ItemStack(MUSIC_DISCS[rng.nextInt(MUSIC_DISCS.length)]);
+    }
+
+    public static ItemStack loadJukebox() {
+        return new ItemStack(Material.JUKEBOX);
+    }
+
     public static ItemStack loadSpeedBoots() {
         ItemStack boots = new ItemStack(Material.LEATHER_BOOTS);
         LeatherArmorMeta meta = (LeatherArmorMeta) boots.getItemMeta();
         meta.setColor(org.bukkit.Color.WHITE);
         meta.setDisplayName(SPEED_BOOTS_NAME);
-        meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by Amakuni Concern",
-                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Experimental Prototype"));
+        meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by Imperial High-Energy Lab",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Bends Spacetime Slightly"));
         boots.setItemMeta(meta);
         boots.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
         boots.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
+        boots.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 10);
         boots.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 10);
         return boots;
     }
@@ -147,7 +203,7 @@ public class CustomItems {
         ItemMeta meta = snowball.getItemMeta();
         meta.setDisplayName(PLASMA_CHARGE_NAME);
         meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by Imperial High-Energy Lab",
-                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "High Energy Physics on Tap"));
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "High-Energy Physics on Demand"));
         snowball.setItemMeta(meta);
         snowball.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 10);
         return snowball;
@@ -197,21 +253,29 @@ public class CustomItems {
         return egg;
     }
 
-    public static List<ItemStack> buildCacheContents(Random rng, double cellFillChance,
-                                                     String[] itemKeys, double[] itemThresholds) {
+    public static List<ItemStack> buildCacheContents(
+            Random rng,
+            int rareMax,   double rareFillChance,   String[] rareKeys,   double[] rareThresholds,
+            int commonMax, double commonFillChance, String[] commonKeys, double[] commonThresholds) {
         List<ItemStack> items = new ArrayList<>();
-        for (int slot = 0; slot < CHEST_SLOTS; slot++) {
-            if (rng.nextDouble() >= cellFillChance) continue;
+        addItems(rng, rareMax,   rareFillChance,   rareKeys,   rareThresholds,   items);
+        addItems(rng, commonMax, commonFillChance, commonKeys, commonThresholds, items);
+        return items;
+    }
+
+    private static void addItems(Random rng, int max, double fillChance,
+                                  String[] keys, double[] thresholds, List<ItemStack> out) {
+        for (int i = 0; i < max; i++) {
+            if (rng.nextDouble() >= fillChance) continue;
             double roll = rng.nextDouble();
-            for (int j = 0; j < itemThresholds.length; j++) {
-                if (roll < itemThresholds[j]) {
-                    ItemStack item = resolveItem(itemKeys[j], rng);
-                    if (item != null) items.add(item);
+            for (int j = 0; j < thresholds.length; j++) {
+                if (roll < thresholds[j]) {
+                    ItemStack item = resolveItem(keys[j], rng);
+                    if (item != null) out.add(item);
                     break;
                 }
             }
         }
-        return items;
     }
 
     private static ItemStack resolveItem(String key, Random rng) {
@@ -220,7 +284,18 @@ public class CustomItems {
             case "hard-hat":            return loadHardHat();
             case "prospector-pickaxe":  return loadProspectorPickaxe();
             case "monomolecular-blade": return loadMonomolecularBlade();
+            case "saddle":              return new ItemStack(Material.SADDLE);
+            case "music-disc":          return loadMusicDisc(rng);
+            case "jukebox":             return loadJukebox();
+            case "nacre": {
+                int mark = poissonSample(rng, 3.0);
+                double bonus = rng.nextDouble() + rng.nextDouble() + rng.nextDouble() + rng.nextDouble() + rng.nextDouble();
+                int duration = (int) (3600 * (0.75 + bonus * 0.1));
+                return loadSpice(mark, duration);
+            }
+            case "phase-device":        return loadPhaseDevice();
             case "speed-boots":         return loadSpeedBoots();
+            case "imperial-tachi":      return loadImperialTachi();
             case "plasma-charge":       return loadPlasmaCharge(poissonSample(rng, 1) + 1);
             case "water-bucket":        return loadWaterBucket();
             case "cow-egg":             return loadCowEgg();
@@ -256,7 +331,7 @@ public class CustomItems {
 
         ItemStack book = new ItemStack(Material.WRITTEN_BOOK);
         BookMeta meta = (BookMeta) book.getItemMeta();
-        meta.setTitle(ChatColor.RESET + player.getName() + "'s Data Pad");
+        meta.setTitle(ChatColor.RESET + "" + ChatColor.AQUA + player.getName() + ChatColor.RESET + "'s Data Pad");
         meta.setAuthor("New Fuji Co. Ltd.");
         meta.setLore(Collections.singletonList(ChatColor.DARK_GRAY + "Long Live the Emperor!"));
         meta.setPages(pages);

@@ -1,9 +1,11 @@
 package org.coreplugin;
 
+import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -18,8 +20,22 @@ public class AnvilListener implements Listener {
             CustomItems.PROSPECTOR_NAME,
             CustomItems.HARD_HAT_NAME,
             CustomItems.SPEED_BOOTS_NAME,
-            CustomItems.PLASMA_CHARGE_NAME
+            CustomItems.PLASMA_CHARGE_NAME,
+            CustomItems.IMPERIAL_TACHI_NAME,
+            CustomItems.PHASE_DEVICE_NAME
     ));
+
+    @EventHandler
+    public void onPrepareItemCraft(PrepareItemCraftEvent event) {
+        for (ItemStack ingredient : event.getInventory().getMatrix()) {
+            if (ingredient == null) continue;
+            ItemMeta meta = ingredient.getItemMeta();
+            if (meta != null && meta.hasDisplayName() && UNREPAIRABLE.contains(meta.getDisplayName())) {
+                event.getInventory().setResult(new ItemStack(Material.AIR));
+                return;
+            }
+        }
+    }
 
     @EventHandler
     public void onAnvilClick(InventoryClickEvent event) {

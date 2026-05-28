@@ -1,6 +1,9 @@
 package org.coreplugin;
 
 import org.bukkit.World;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.coreplugin.worldgen.DesertWorldGenerator;
@@ -38,8 +41,13 @@ public final class CorePlugin extends JavaPlugin {
         HostileMobTask.register(this, sandstorm);
         OreCaveDamageTask.register(this);
         SpeedBootsTask.register(this);
+        getServer().getPluginManager().registerEvents(new PhaseDeviceListener(this), this);
         DarknessListener.register(this);
-        getCommand("solarflare").setExecutor(new SandstormCommand(sandstorm));
+        getCommand("sandstorm").setExecutor(new SandstormCommand(sandstorm));
+        getServer().getPluginManager().registerEvents(new Listener() {
+            @EventHandler
+            public void onExplode(EntityExplodeEvent e) { e.setYield(1.0f); }
+        }, this);
 
         // Main world is already loaded before onEnable on CraftBukkit 1.8;
         // set spawn now for any matching world that is already up.

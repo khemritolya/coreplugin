@@ -83,19 +83,29 @@ world-gen:
       clay-radius: 0.5
       decoration-density: 0.5
       cache-chance: 0.9999
-      cache-cell-fill-chance: 0.35
-      cache-item-weights:
-        cookies: 5.0
+      cache-rare-max: 10
+      cache-rare-fill-chance: 0.9
+      cache-common-max: 7
+      cache-common-fill-chance: 0.9
+      cache-rare-item-weights:
         hard-hat: 1.0
         prospector-pickaxe: 1.0
         monomolecular-blade: 1.0
+        imperial-tachi: 2.0
         speed-boots: 1.0
+        nacre: 3.0
         plasma-charge: 1.0
-        water-bucket: 2.0
-        cow-egg: 3.0
-        pig-egg: 3.0
-        sheep-egg: 3.0
-        chicken-egg: 5.0
+        phase-device: 10.0
+      cache-common-item-weights:
+        cookies: 2.0
+        music-disc: 1.0
+        jukebox: 0.1
+        saddle: 0.5
+        water-bucket: 1.0
+        cow-egg: 0.5
+        pig-egg: 1.0
+        sheep-egg: 1.0
+        chicken-egg: 2.0
       mob-spawn-rates:
         cow: 1.0
         pig: 0.5

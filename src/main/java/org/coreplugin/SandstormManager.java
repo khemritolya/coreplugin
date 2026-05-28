@@ -57,7 +57,7 @@ public class SandstormManager extends BukkitRunnable {
                 if (pendingTicks <= 0) startStorm();
             } else if (rng.nextDouble() < (double) checkInterval / meanArrivalInterval) {
                 pendingTicks = warningTicks;
-                JoinListener.satSend("Warning! Solar Flare in 1 minute!", plugin);
+                JoinListener.satSend("Warning! Sandstorm in 1 minute!", plugin);
             }
             return;
         }
@@ -112,16 +112,22 @@ public class SandstormManager extends BukkitRunnable {
         active = true;
         remainingTicks = durationTicks;
         damageAccumulator = 0;
-        JoinListener.satSend("Danger! Solar Flare!", plugin);
+        for (org.bukkit.World world : Bukkit.getWorlds()) {
+            if (plugin.isGeneratorWorld(world.getName())) world.setTime(18000);
+        }
+        JoinListener.satSend("Danger! Sandstorm!", plugin);
     }
 
     public void stopStorm() {
         active = false;
         pendingTicks = 0;
+        for (org.bukkit.World world : Bukkit.getWorlds()) {
+            if (plugin.isGeneratorWorld(world.getName())) world.setTime(6000);
+        }
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.resetPlayerWeather();
         }
-        JoinListener.satSend("Solar Flare dissipated.", plugin);
+        JoinListener.satSend("Sandstorm dissipated.", plugin);
     }
 
     public boolean isActive() {

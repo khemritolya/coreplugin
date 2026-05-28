@@ -21,9 +21,9 @@ public class SandstormCommand implements CommandExecutor {
 
         if (args.length == 0 || args[0].equalsIgnoreCase("status")) {
             if (manager.isActive()) {
-                sender.sendMessage("Solar Flare is ACTIVE (" + manager.getRemainingTicks() + " ticks remaining).");
+                sender.sendMessage("Sandstorm is ACTIVE (" + manager.getRemainingTicks() + " ticks remaining).");
             } else {
-                sender.sendMessage("No Solar Flare is active.");
+                sender.sendMessage("No Sandstorm is active.");
             }
             return true;
         }
@@ -34,29 +34,29 @@ public class SandstormCommand implements CommandExecutor {
                 try {
                     seconds = Integer.parseInt(args[1]);
                 } catch (NumberFormatException e) {
-                    sender.sendMessage("Usage: /solarflare start [seconds]");
+                    sender.sendMessage("Usage: /sandstorm start [seconds]");
                     return true;
                 }
                 manager.startStorm(seconds * 20);
-                sender.sendMessage("Solar Flare started for " + seconds + " seconds.");
+                sender.sendMessage("Sandstorm started for " + seconds + " seconds.");
             } else {
                 manager.startStorm();
-                sender.sendMessage("Solar Flare started.");
+                sender.sendMessage("Sandstorm started.");
             }
             return true;
         }
 
         if (args[0].equalsIgnoreCase("stop")) {
             if (!manager.isActive()) {
-                sender.sendMessage("No Solar Flare is currently active.");
+                sender.sendMessage("No Sandstorm is currently active.");
             } else {
                 manager.stopStorm();
-                sender.sendMessage("Solar Flare stopped.");
+                sender.sendMessage("Sandstorm stopped.");
             }
             return true;
         }
 
-        sender.sendMessage("Usage: /solarflare [start [seconds] | stop | status]");
+        sender.sendMessage("Usage: /sandstorm [start [seconds] | stop | status]");
         return true;
     }
 }

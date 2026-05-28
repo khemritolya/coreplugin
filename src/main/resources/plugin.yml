@@ -5,6 +5,6 @@ main: org.coreplugin.CorePlugin
 load: STARTUP
 
 commands:
-  solarflare:
-    description: Control solar flares
-    usage: /solarflare [start [seconds] | stop | status]
+  sandstorm:
+    description: Control sandstorms
+    usage: /sandstorm [start [seconds] | stop | status]

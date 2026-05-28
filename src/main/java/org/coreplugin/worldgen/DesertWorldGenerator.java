@@ -18,6 +18,7 @@ import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.material.MaterialData;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -59,14 +60,17 @@ public class DesertWorldGenerator extends ChunkGenerator {
     private final double[] oasisDecorationThresholds;
     private final double[] oasisMobRates;
     private final double   oasisCacheChance;
-    private final double   oasisCacheCellFillChance;
-    private final double[] oasisCacheItemThresholds;
+    private final int      oasisCacheRareMax;
+    private final double   oasisCacheRareFillChance;
+    private final double[] oasisCacheRareThresholds;
+    private final int      oasisCacheCommonMax;
+    private final double   oasisCacheCommonFillChance;
+    private final double[] oasisCacheCommonThresholds;
 
-    private static final String[] CACHE_ITEM_KEYS = {
-        "cookies", "hard-hat", "prospector-pickaxe", "monomolecular-blade", "speed-boots", "plasma-charge",
-        "water-bucket", "cow-egg", "pig-egg", "sheep-egg", "chicken-egg"
-    };
-    private static final double[] CACHE_ITEM_DEFAULTS = { 5.0, 10.0, 10.0, 1.0, 8.0, 6.0, 4.0, 2.0, 2.0, 2.0, 2.0 };
+    private static final String[] RARE_ITEM_KEYS     = { "hard-hat", "prospector-pickaxe", "monomolecular-blade", "imperial-tachi", "speed-boots", "nacre", "plasma-charge", "phase-device" };
+    private static final double[] RARE_ITEM_DEFAULTS  = { 1.0, 1.0, 1.0, 2.0, 1.0, 3.0, 1.0, 1.0 };
+    private static final String[] COMMON_ITEM_KEYS   = { "cookies", "music-disc", "jukebox", "saddle", "water-bucket", "cow-egg", "pig-egg", "sheep-egg", "chicken-egg" };
+    private static final double[] COMMON_ITEM_DEFAULTS = { 5.0, 1.0, 0.1, 1.0, 2.0, 3.0, 3.0, 3.0, 5.0 };
 
     private static final String[] DECORATION_KEYS = {
         "tall-grass", "fern", "dandelion", "poppy",
@@ -168,24 +172,13 @@ public class DesertWorldGenerator extends ChunkGenerator {
         oasisPondBoundaryAmplitude    = oasisCfg.getInt("pond-boundary-amplitude",   4);
         oasisClayRadius = oasisCfg.getDouble("clay-radius",              1.0);
         oasisDecorationDensity = oasisCfg.getDouble("decoration-density", 0.25);
-        oasisCacheChance           = oasisCfg.getDouble("cache-chance",            0.85);
-        oasisCacheCellFillChance   = oasisCfg.getDouble("cache-cell-fill-chance", 0.40);
-        ConfigurationSection cacheItemCfg = oasisCfg.getConfigurationSection("cache-item-weights");
-        double[] cacheItemWeights = new double[CACHE_ITEM_KEYS.length];
-        for (int i = 0; i < CACHE_ITEM_KEYS.length; i++) {
-            cacheItemWeights[i] = cacheItemCfg != null
-                ? cacheItemCfg.getDouble(CACHE_ITEM_KEYS[i], CACHE_ITEM_DEFAULTS[i])
-                : CACHE_ITEM_DEFAULTS[i];
-        }
-        double cacheItemSum = 0;
-        for (double w : cacheItemWeights) cacheItemSum += w;
-        oasisCacheItemThresholds = new double[cacheItemWeights.length];
-        double cacheItemCum = 0;
-        for (int i = 0; i < cacheItemWeights.length - 1; i++) {
-            cacheItemCum += cacheItemWeights[i] / cacheItemSum;
-            oasisCacheItemThresholds[i] = cacheItemCum;
-        }
-        oasisCacheItemThresholds[cacheItemWeights.length - 1] = 1.0;
+        oasisCacheChance         = oasisCfg.getDouble("cache-chance", 0.85);
+        oasisCacheRareMax        = oasisCfg.getInt("cache-rare-max", 5);
+        oasisCacheRareFillChance = oasisCfg.getDouble("cache-rare-fill-chance", 0.6);
+        oasisCacheCommonMax        = oasisCfg.getInt("cache-common-max", 10);
+        oasisCacheCommonFillChance = oasisCfg.getDouble("cache-common-fill-chance", 0.7);
+        oasisCacheRareThresholds   = buildThresholds(RARE_ITEM_KEYS,   RARE_ITEM_DEFAULTS,   oasisCfg.getConfigurationSection("cache-rare-item-weights"));
+        oasisCacheCommonThresholds = buildThresholds(COMMON_ITEM_KEYS, COMMON_ITEM_DEFAULTS, oasisCfg.getConfigurationSection("cache-common-item-weights"));
         ConfigurationSection mobRatesCfg = oasisCfg.getConfigurationSection("mob-spawn-rates");
         oasisMobRates = new double[MOB_RATE_KEYS.length];
         for (int i = 0; i < MOB_RATE_KEYS.length; i++) {
@@ -243,6 +236,23 @@ public class DesertWorldGenerator extends ChunkGenerator {
             densitiesCfg.getDouble("diamond",  0.10),
             densitiesCfg.getDouble("emerald",  0.08)
         };
+    }
+
+    private static double[] buildThresholds(String[] keys, double[] defaults, ConfigurationSection cfg) {
+        double[] weights = new double[keys.length];
+        for (int i = 0; i < keys.length; i++) {
+            weights[i] = cfg != null ? cfg.getDouble(keys[i], defaults[i]) : defaults[i];
+        }
+        double sum = 0;
+        for (double w : weights) sum += w;
+        double[] thresholds = new double[weights.length];
+        double cum = 0;
+        for (int i = 0; i < weights.length - 1; i++) {
+            cum += weights[i] / sum;
+            thresholds[i] = cum;
+        }
+        thresholds[weights.length - 1] = 1.0;
+        return thresholds;
     }
 
     private void initIfNeeded(long seed) {
@@ -775,8 +785,14 @@ public class DesertWorldGenerator extends ChunkGenerator {
         if (!(state instanceof Chest)) return;
 
         Inventory inv = ((Chest) state).getBlockInventory();
-        for (ItemStack item : CustomItems.buildCacheContents(rng, oasisCacheCellFillChance, CACHE_ITEM_KEYS, oasisCacheItemThresholds)) {
-            inv.addItem(item);
+        List<ItemStack> items = CustomItems.buildCacheContents(rng,
+                oasisCacheRareMax,   oasisCacheRareFillChance,   RARE_ITEM_KEYS,   oasisCacheRareThresholds,
+                oasisCacheCommonMax, oasisCacheCommonFillChance, COMMON_ITEM_KEYS, oasisCacheCommonThresholds);
+        List<Integer> slots = new ArrayList<>();
+        for (int i = 0; i < inv.getSize(); i++) slots.add(i);
+        Collections.shuffle(slots, rng);
+        for (int i = 0; i < Math.min(items.size(), slots.size()); i++) {
+            inv.setItem(slots.get(i), items.get(i));
         }
         state.update(true);
     }

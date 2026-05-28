@@ -21,10 +21,10 @@ public class DarknessListener extends BukkitRunnable {
     public void run() {
         for (Player player : org.bukkit.Bukkit.getOnlinePlayers()) {
             org.bukkit.GameMode gm = player.getGameMode();
-            if (gm == org.bukkit.GameMode.CREATIVE || gm == org.bukkit.GameMode.SPECTATOR) continue;
+            if (gm == org.bukkit.GameMode.CREATIVE) continue;
             Block eyeBlock = player.getEyeLocation().getBlock();
             int effectiveLight = effectiveLightAt(eyeBlock, player.getWorld());
-            if (effectiveLight <= threshold) {
+            if (effectiveLight <= threshold && !player.hasPotionEffect(PotionEffectType.NIGHT_VISION)) {
                 player.addPotionEffect(
                     new PotionEffect(PotionEffectType.BLINDNESS, duration, 0, false, false),
                     true

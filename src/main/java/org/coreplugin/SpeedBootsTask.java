@@ -14,7 +14,7 @@ public class SpeedBootsTask extends BukkitRunnable {
     private static final int EFFECT_DURATION = 40;
 
     private static final PotionEffect SPEED      = new PotionEffect(PotionEffectType.SPEED,      EFFECT_DURATION, 19, false, false);
-    private static final PotionEffect JUMP_BOOST = new PotionEffect(PotionEffectType.JUMP,       EFFECT_DURATION,  1, false, false);
+    private static final PotionEffect JUMP_BOOST = new PotionEffect(PotionEffectType.JUMP,       EFFECT_DURATION,  2, false, false);
     private static final PotionEffect HUNGER     = new PotionEffect(PotionEffectType.HUNGER,     EFFECT_DURATION,  4, false, false);
 
     private final CorePlugin plugin;

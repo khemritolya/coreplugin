@@ -83,14 +83,14 @@ world-gen:
       clay-radius: 0.5
       decoration-density: 0.5
       cache-chance: 0.9999
-      cache-rare-max: 10
+      cache-rare-max: 7
       cache-rare-fill-chance: 0.9
       cache-common-max: 7
       cache-common-fill-chance: 0.9
       cache-rare-item-weights:
         hard-hat: 1.0
         prospector-pickaxe: 1.0
-        monomolecular-blade: 1.0
+        monomolecular-blade: 10.0
         imperial-tachi: 2.0
         speed-boots: 1.0
         nacre: 3.0
@@ -98,6 +98,7 @@ world-gen:
         phase-device: 10.0
       cache-common-item-weights:
         cookies: 2.0
+        name-tag: 0.5
         music-disc: 1.0
         jukebox: 0.1
         saddle: 0.5

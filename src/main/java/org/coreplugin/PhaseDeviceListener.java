@@ -25,8 +25,6 @@ import java.util.Arrays;
 
 public class PhaseDeviceListener implements Listener {
 
-    private static final long COOLDOWN_MS = 5 * 60 * 1000L;
-
     private final Plugin plugin;
 
     public PhaseDeviceListener(Plugin plugin) {
@@ -54,38 +52,45 @@ public class PhaseDeviceListener implements Listener {
 
         if (!tag.hasKey("PhaseIdMost")) return; // not a real Phase Device
 
+        long cooldownMs    = tag.getLong("PhaseCooldownMs");
+        long durationTicks = tag.getLong("PhaseDurationTicks");
+
         long now = System.currentTimeMillis();
         long readyAt = tag.getLong("PhaseReadyAt");
         if (now < readyAt) {
             long remaining = (readyAt - now + 999) / 1000;
             player.sendMessage("The " + CustomItems.PHASE_DEVICE_NAME + ChatColor.RESET +
-                    " is cooling down. Try again in " + ChatColor.AQUA + remaining + ChatColor.RESET + "s.");
+                    " is cooling down. Try again in " + ChatColor.AQUA + remaining + "s" + ChatColor.RESET + ".");
             return;
         }
 
-        tag.setLong("PhaseReadyAt", now + COOLDOWN_MS);
+        tag.setLong("PhaseReadyAt", now + cooldownMs);
         nmsStack.setTag(tag);
         player.setItemInHand(CraftItemStack.asBukkitCopy(nmsStack));
 
-        player.sendMessage(ChatColor.DARK_PURPLE + "" + ChatColor.ITALIC + "Space bends, and you rotate out of phase with Euclidean existence.");
-        spawnExplosion(player.getLocation());
+        player.sendMessage(ChatColor.DARK_PURPLE + "" + ChatColor.ITALIC + "Reality bends, and you rotate out of phase with Euclidean existence.");
         player.setGameMode(GameMode.SPECTATOR);
+        spawnExplosion(player.getLocation());
 
         new BukkitRunnable() {
             @Override
             public void run() {
                 if (player.isOnline() && player.getGameMode() == GameMode.SPECTATOR) {
-                    player.setGameMode(GameMode.SURVIVAL);
-                    player.sendMessage(ChatColor.DARK_PURPLE + "" + ChatColor.ITALIC + "Space bends again, and Euclidean existence reasserts itself.");
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 200, 0), true);
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION, 200, 0), true);
+                    player.sendMessage(ChatColor.DARK_PURPLE + "" + ChatColor.ITALIC + "Reality bends again, and Euclidean existence reasserts itself.");
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 400, 0), true);
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, 400, 4), true);
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING, 400, 1), true);
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 400, 4), true);
+
                     spawnExplosion(player.getLocation());
+                    player.setGameMode(GameMode.SURVIVAL);
                 }
             }
-        }.runTaskLater(plugin, 201L);
+        }.runTaskLater(plugin, durationTicks + 1L);
     }
 
     private void spawnExplosion(Location loc) {
+        loc.getWorld().createExplosion(loc.getX(), loc.getY(), loc.getZ(), 3.0f, false, false);
         Firework fw = loc.getWorld().spawn(loc, Firework.class);
         FireworkMeta fwMeta = fw.getFireworkMeta();
         fwMeta.addEffect(FireworkEffect.builder()

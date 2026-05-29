@@ -123,7 +123,7 @@ public class CustomItems {
         NBTTagCompound dmg = new NBTTagCompound();
         dmg.setString("AttributeName", "generic.attackDamage");
         dmg.setString("Name", "generic.attackDamage");
-        dmg.setDouble("Amount", 9001.0);
+        dmg.setDouble("Amount", Short.MAX_VALUE);
         dmg.setInt("Operation", 0);
         dmg.setLong("UUIDMost", 894654L);
         dmg.setLong("UUIDLeast", 2872L);
@@ -149,22 +149,34 @@ public class CustomItems {
         return CraftItemStack.asBukkitCopy(nmsStack);
     }
 
-    public static ItemStack loadPhaseDevice() {
+    public static ItemStack loadPhaseDevice(Random rng) {
+        double t = rng.nextDouble();
+        long cooldownMs    = (long)(180_000 + t * 120_000); // 3–5 min
+        long durationTicks = (long)(100     + t * 100);     // 5–10 sec
+
+        int cooldownSec = (int)(cooldownMs / 1000);
+        int durationSec = (int)(durationTicks / 20);
+
         ItemStack charge = new ItemStack(Material.FIREWORK_CHARGE);
         FireworkEffectMeta meta = (FireworkEffectMeta) charge.getItemMeta();
         meta.setDisplayName(PHASE_DEVICE_NAME);
-        meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by Imperial High-Energy Lab",
-                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Arcane Reality-Bending Bauble"));
+        meta.setLore(Arrays.asList(
+                ChatColor.RESET + "" + ChatColor.GRAY + "by Imperial High-Energy Lab",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Mildly Reality-Bending Bauble",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Length: " + ChatColor.AQUA + durationSec + "s",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Cooldown: " + ChatColor.AQUA + cooldownSec + "s"));
         meta.setEffect(FireworkEffect.builder().withColor(org.bukkit.Color.PURPLE).build());
         charge.setItemMeta(meta);
-        charge.addUnsafeEnchantment(Enchantment.ARROW_INFINITE, 10);
+        charge.addUnsafeEnchantment(Enchantment.ARROW_INFINITE, 1);
 
         java.util.UUID id = java.util.UUID.randomUUID();
         net.minecraft.server.v1_8_R3.ItemStack nmsStack = CraftItemStack.asNMSCopy(charge);
         NBTTagCompound tag = nmsStack.hasTag() ? nmsStack.getTag() : new NBTTagCompound();
-        tag.setLong("PhaseIdMost",  id.getMostSignificantBits());
-        tag.setLong("PhaseIdLeast", id.getLeastSignificantBits());
-        tag.setLong("PhaseReadyAt", 0L);
+        tag.setLong("PhaseIdMost",        id.getMostSignificantBits());
+        tag.setLong("PhaseIdLeast",       id.getLeastSignificantBits());
+        tag.setLong("PhaseReadyAt",       0L);
+        tag.setLong("PhaseCooldownMs",    cooldownMs);
+        tag.setLong("PhaseDurationTicks", durationTicks);
         nmsStack.setTag(tag);
         return CraftItemStack.asBukkitCopy(nmsStack);
     }
@@ -280,6 +292,7 @@ public class CustomItems {
 
     private static ItemStack resolveItem(String key, Random rng) {
         switch (key) {
+            case "name-tag":            return new ItemStack(Material.NAME_TAG);
             case "cookies":             return loadCookies(poissonSample(rng, 1) + 1);
             case "hard-hat":            return loadHardHat();
             case "prospector-pickaxe":  return loadProspectorPickaxe();
@@ -293,7 +306,7 @@ public class CustomItems {
                 int duration = (int) (3600 * (0.75 + bonus * 0.1));
                 return loadSpice(mark, duration);
             }
-            case "phase-device":        return loadPhaseDevice();
+            case "phase-device":        return loadPhaseDevice(rng);
             case "speed-boots":         return loadSpeedBoots();
             case "imperial-tachi":      return loadImperialTachi();
             case "plasma-charge":       return loadPlasmaCharge(poissonSample(rng, 1) + 1);

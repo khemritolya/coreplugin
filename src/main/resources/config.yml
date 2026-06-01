@@ -39,6 +39,9 @@ world-gen:
     radius: 20
     max-replace-chance: 0.8
     depth: 10
+
+  uplink-beacon:
+    spawn-chance: 0.10
   noise:
     octaves: 3
     frequency: 0.0025
@@ -83,19 +86,21 @@ world-gen:
       clay-radius: 0.5
       decoration-density: 0.5
       cache-chance: 0.9999
-      cache-rare-max: 7
+      cache-rare-max: 15
       cache-rare-fill-chance: 0.9
       cache-common-max: 7
       cache-common-fill-chance: 0.9
       cache-rare-item-weights:
         hard-hat: 1.0
         prospector-pickaxe: 1.0
-        monomolecular-blade: 10.0
+        monomolecular-blade: 1.0
         imperial-tachi: 2.0
         speed-boots: 1.0
-        nacre: 3.0
+        nacre: 0.0
         plasma-charge: 1.0
-        phase-device: 10.0
+        phase-device: 1.0
+        nano-crystal: 1.0
+        uplink-card: 10.0
       cache-common-item-weights:
         cookies: 2.0
         name-tag: 0.5

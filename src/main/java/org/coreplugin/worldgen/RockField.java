@@ -16,6 +16,7 @@ public class RockField {
     private final double   oasisThreshold;
     private final double   oreCaveThreshold;
     private final double[] oreThresholds;
+    private final double   uplinkBeaconChance;
     private final FBMNoise noise;
     private final int      minHeight;
     private final int      maxHeight;
@@ -27,6 +28,7 @@ public class RockField {
 
     public RockField(long seed, int cellSize, int radius, double spawnChance, double embedFactor,
                      double oasisChance, double oreCaveChance, double[] oreWeights,
+                     double uplinkBeaconChance,
                      FBMNoise noise, int minHeight, int maxHeight) {
         this.seed        = seed;
         this.cellSize    = cellSize;
@@ -37,8 +39,9 @@ public class RockField {
         this.minHeight   = minHeight;
         this.maxHeight   = maxHeight;
 
-        this.oasisThreshold   = oasisChance;
-        this.oreCaveThreshold = oasisChance + oreCaveChance;
+        this.oasisThreshold    = oasisChance;
+        this.oreCaveThreshold  = oasisChance + oreCaveChance;
+        this.uplinkBeaconChance = uplinkBeaconChance;
 
         double sum = 0;
         for (double w : oreWeights) sum += w;
@@ -98,6 +101,16 @@ public class RockField {
         double dz = worldZ - cz;
         double dist = Math.sqrt(dx * dx + dz * dz);
         return Math.max(0.0, 1.0 - dist / radius);
+    }
+
+    public int getCellSize() { return cellSize; }
+
+    public boolean isUplinkBeaconCell(int cellX, int cellZ) {
+        if (getRockInCell(cellX, cellZ) != null) return false;
+        long hash = seed
+            ^ (long) cellX * 0x517CC1B727220A95L
+            ^ (long) cellZ * 0xDB4F0B9175AE2165L;
+        return new Random(hash).nextDouble() < uplinkBeaconChance;
     }
 
     private RockSpec getRockInCell(int cellX, int cellZ) {

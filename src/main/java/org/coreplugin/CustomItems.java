@@ -39,12 +39,15 @@ public class CustomItems {
     public static final String PROSPECTOR_NAME         = ChatColor.RESET + "" + ChatColor.DARK_RED + "Prospector's Pickaxe";
     public static final String HARD_HAT_NAME           = ChatColor.RESET + "" + ChatColor.DARK_RED + "Hard Hat";
     public static final String IMPERIAL_TACHI_NAME     = ChatColor.RESET + "" + ChatColor.DARK_RED + "Imperial Tachi";
+    public static final String NANO_CRYSTAL_NAME       = ChatColor.RESET + "" + ChatColor.DARK_RED + "Nano Carapace";
 
-    public static final String SPEED_BOOTS_NAME        = ChatColor.RESET + "" + ChatColor.AQUA + "QuantumSuit Boots";
-    public static final String PHASE_DEVICE_NAME       = ChatColor.RESET + "" + ChatColor.DARK_PURPLE + "Phase Device";
-    public static final String PLASMA_CHARGE_NAME      = ChatColor.RESET + "" + ChatColor.AQUA + "Plasma Charge";
+    public static final String SPEED_BOOTS_NAME           = ChatColor.RESET + "" + ChatColor.AQUA + "QuantumSuit Boots";
+    public static final String PHASE_DEVICE_NAME          = ChatColor.RESET + "" + ChatColor.DARK_PURPLE + "Phase Device";
+    public static final String PLASMA_CHARGE_NAME         = ChatColor.RESET + "" + ChatColor.AQUA + "Plasma Charge";
 
-    private static final int CHEST_SLOTS = 50;
+    public static final String UPLINK_CARD_NAME           = ChatColor.RESET + "" + ChatColor.YELLOW + "Uplink Card";
+    public static final String DIAMONDOID_CHESTPLATE_NAME = ChatColor.RESET + "" + ChatColor.AQUA + "Diamondoid Chestplate";
+    public static final String UPLINK_BEACON_DROP_NAME    = ChatColor.RESET + "" + ChatColor.GOLD + "Uplink Beacon";
 
     public static ItemStack loadSpice(int mark, int duration) {
         ItemStack potion = new ItemStack(Material.POTION);
@@ -221,6 +224,30 @@ public class CustomItems {
         return snowball;
     }
 
+    public static ItemStack loadNanoCrystal(Random rng) {
+        // Exponential decay (λ=1) bucketed into 1–4 hearts; ~63% chance of 1, ~23% 2, ~9% 3, ~5% 4
+        int hearts = Math.min(4, (int)(-Math.log(rng.nextDouble())) + 1);
+
+        ItemStack crystal = new ItemStack(Material.PRISMARINE_CRYSTALS);
+        ItemMeta meta = crystal.getItemMeta();
+        meta.setDisplayName(NANO_CRYSTAL_NAME);
+        meta.setLore(Arrays.asList(
+                ChatColor.RESET + "" + ChatColor.GRAY + "by Amakuni Concern",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Little Things, Big Impact™",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Max Health: "
+                        + ChatColor.YELLOW + "+" + hearts + (hearts == 1 ? " Heart" : " Hearts")));
+        crystal.setItemMeta(meta);
+
+        java.util.UUID id = java.util.UUID.randomUUID();
+        net.minecraft.server.v1_8_R3.ItemStack nmsStack = CraftItemStack.asNMSCopy(crystal);
+        NBTTagCompound tag = nmsStack.hasTag() ? nmsStack.getTag() : new NBTTagCompound();
+        tag.setLong("NanoCrystalIdMost",  id.getMostSignificantBits());
+        tag.setLong("NanoCrystalIdLeast", id.getLeastSignificantBits());
+        tag.setByte("NanoCrystalHearts",  (byte) hearts);
+        nmsStack.setTag(tag);
+        return CraftItemStack.asBukkitCopy(nmsStack);
+    }
+
     public static ItemStack loadWaterBucket() {
         return new ItemStack(Material.WATER_BUCKET);
     }
@@ -310,6 +337,8 @@ public class CustomItems {
             case "speed-boots":         return loadSpeedBoots();
             case "imperial-tachi":      return loadImperialTachi();
             case "plasma-charge":       return loadPlasmaCharge(poissonSample(rng, 1) + 1);
+            case "nano-crystal":        return loadNanoCrystal(rng);
+            case "uplink-card":         return loadUplinkCard();
             case "water-bucket":        return loadWaterBucket();
             case "cow-egg":             return loadCowEgg();
             case "pig-egg":             return loadPigEgg();
@@ -368,5 +397,47 @@ public class CustomItems {
                 ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Click to set Spawn"));
         bed.setItemMeta(meta);
         return bed;
+    }
+
+    public static ItemStack loadUplinkCard() {
+        ItemStack paper = new ItemStack(Material.PAPER);
+        ItemMeta meta = paper.getItemMeta();
+        meta.setDisplayName(UPLINK_CARD_NAME);
+        meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by New Fuji Co. Ltd.",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Click on an Obsidian Uplink Beacon to Activate"));
+        paper.setItemMeta(meta);
+
+        net.minecraft.server.v1_8_R3.ItemStack nmsStack = CraftItemStack.asNMSCopy(paper);
+        NBTTagCompound tag = nmsStack.hasTag() ? nmsStack.getTag() : new NBTTagCompound();
+        tag.setByte("UplinkCard", (byte) 1);
+        nmsStack.setTag(tag);
+        return CraftItemStack.asBukkitCopy(nmsStack);
+    }
+
+    public static ItemStack loadDiamondoidChestplate() {
+        ItemStack chest = new ItemStack(Material.DIAMOND_CHESTPLATE);
+        ItemMeta meta = chest.getItemMeta();
+        meta.setDisplayName(DIAMONDOID_CHESTPLATE_NAME);
+        meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by Amakuni Concern",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Forged from a Single Molecule"));
+        chest.setItemMeta(meta);
+        chest.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
+
+        net.minecraft.server.v1_8_R3.ItemStack nmsStack = CraftItemStack.asNMSCopy(chest);
+        NBTTagCompound tag = nmsStack.hasTag() ? nmsStack.getTag() : new NBTTagCompound();
+        tag.setByte("Unbreakable", (byte) 1);
+        nmsStack.setTag(tag);
+        return CraftItemStack.asBukkitCopy(nmsStack);
+    }
+
+    public static ItemStack loadUplinkBeaconDrop() {
+        ItemStack star = new ItemStack(Material.NETHER_STAR);
+        ItemMeta meta = star.getItemMeta();
+        meta.setDisplayName(UPLINK_BEACON_DROP_NAME);
+        meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by New Fuji Co. Ltd.",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Click to Escape " + ChatColor.GREEN + "HD 31174 c",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Range: " + ChatColor.YELLOW + "10m"));
+        star.setItemMeta(meta);
+        return star;
     }
 }

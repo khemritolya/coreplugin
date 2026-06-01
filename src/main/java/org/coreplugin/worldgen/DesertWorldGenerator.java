@@ -18,6 +18,9 @@ import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.material.MaterialData;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
+import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -67,8 +70,8 @@ public class DesertWorldGenerator extends ChunkGenerator {
     private final double   oasisCacheCommonFillChance;
     private final double[] oasisCacheCommonThresholds;
 
-    private static final String[] RARE_ITEM_KEYS     = { "hard-hat", "prospector-pickaxe", "monomolecular-blade", "imperial-tachi", "speed-boots", "nacre", "plasma-charge", "phase-device" };
-    private static final double[] RARE_ITEM_DEFAULTS  = { 1.0, 1.0, 1.0, 2.0, 1.0, 3.0, 1.0, 1.0 };
+    private static final String[] RARE_ITEM_KEYS     = { "hard-hat", "prospector-pickaxe", "monomolecular-blade", "imperial-tachi", "speed-boots", "nacre", "plasma-charge", "phase-device", "nano-crystal", "uplink-card" };
+    private static final double[] RARE_ITEM_DEFAULTS  = { 1.0, 1.0, 1.0, 2.0, 1.0, 3.0, 1.0, 1.0, 1.0, 1.0 };
     private static final String[] COMMON_ITEM_KEYS   = { "cookies", "music-disc", "jukebox", "saddle", "water-bucket", "cow-egg", "pig-egg", "sheep-egg", "chicken-egg" };
     private static final double[] COMMON_ITEM_DEFAULTS = { 5.0, 1.0, 0.1, 1.0, 2.0, 3.0, 3.0, 3.0, 5.0 };
 
@@ -108,6 +111,10 @@ public class DesertWorldGenerator extends ChunkGenerator {
     private final double spiceFieldRadius;
     private final double spiceFieldMaxChance;
     private final int    spiceFieldDepth;
+
+    // Uplink beacons
+    private final double uplinkBeaconChance;
+    private List<StructurePlacer.BlockDef> beaconBlocks;
 
     // Ore cave interior
     private final double[] oreDensities;
@@ -225,6 +232,20 @@ public class DesertWorldGenerator extends ChunkGenerator {
         spiceFieldMaxChance = spiceCfg != null ? spiceCfg.getDouble("max-replace-chance", 0.6)  : 0.6;
         spiceFieldDepth     = spiceCfg != null ? spiceCfg.getInt(   "depth",              5)    : 5;
 
+        ConfigurationSection uplinkCfg = cfg.getConfigurationSection("uplink-beacon");
+        uplinkBeaconChance = uplinkCfg != null ? uplinkCfg.getDouble("spawn-chance", 0.10) : 0.10;
+
+        File beaconFile = new File(plugin.getDataFolder(), "structures/uplink_beacon.json");
+        if (beaconFile.exists()) {
+            try {
+                beaconBlocks = StructurePlacer.load(beaconFile);
+            } catch (IOException e) {
+                plugin.getLogger().warning("Could not load uplink_beacon.json: " + e.getMessage());
+            }
+        } else {
+            plugin.getLogger().warning("structures/uplink_beacon.json not found — uplink beacons disabled.");
+        }
+
         ConfigurationSection oreCaveCfg = rockCfg.getConfigurationSection("ore-cave");
         ConfigurationSection densitiesCfg = oreCaveCfg.getConfigurationSection("densities");
         oreDensities = new double[]{
@@ -261,6 +282,7 @@ public class DesertWorldGenerator extends ChunkGenerator {
         noise     = new FBMNoise(seed, octaves, frequency, lacunarity, persistence, warpStrength);
         rockField = new RockField(seed, rockCellSize, rockRadius, rockSpawnChance, rockEmbedFactor,
                                   rockOasisChance, rockOreCaveChance, rockOreWeights,
+                                  uplinkBeaconChance,
                                   noise, minHeight, maxHeight);
         rockNoise = new SimplexNoise(seed + 1);
     }
@@ -291,6 +313,16 @@ public class DesertWorldGenerator extends ChunkGenerator {
             if (Math.sqrt(dx * dx + dy * dy + dz * dz) <= rock.radius) return true;
         }
         return false;
+    }
+
+    public boolean isUplinkBeaconAt(long seed, int worldX, int worldZ) {
+        initIfNeeded(seed);
+        if (rockField == null) return false;
+        int cellX   = Math.floorDiv(worldX, rockCellSize);
+        int cellZ   = Math.floorDiv(worldZ, rockCellSize);
+        int centerX = cellX * rockCellSize + rockCellSize / 2;
+        int centerZ = cellZ * rockCellSize + rockCellSize / 2;
+        return worldX == centerX && worldZ == centerZ && rockField.isUplinkBeaconCell(cellX, cellZ);
     }
 
     public int[] findOasisSpawn(long seed) {
@@ -332,6 +364,11 @@ public class DesertWorldGenerator extends ChunkGenerator {
         ChunkData chunk = createChunkData(world);
         int heightRange = maxHeight - minHeight;
 
+        // Per-chunk cache for beacon cell lookup (cells are 200 blocks wide; most chunks stay in one cell)
+        int  lastCellX    = Integer.MIN_VALUE;
+        int  lastCellZ    = Integer.MIN_VALUE;
+        boolean lastIsBeacon = false;
+
         for (int x = 0; x < 16; x++) {
             for (int z = 0; z < 16; z++) {
                 int worldX = chunkX * 16 + x;
@@ -345,17 +382,33 @@ public class DesertWorldGenerator extends ChunkGenerator {
                     chunk.setBlock(x, y, z, new MaterialData(Material.SAND, (byte) 1));
                 }
 
-                double spiceFactor = rockField.getSpiceFieldFactor(worldX, worldZ, spiceFieldRadius);
-                if (spiceFactor > 0) {
-                    long colSeed = cachedSeed ^ ((long) worldX * 0xB5EE8E3FL) ^ ((long) worldZ * 0xC7537B51L);
-                    int bottom = Math.max(1, surface - spiceFieldDepth + 1);
-                    for (int y = surface; y >= bottom; y--) {
-                        int depthBelow = surface - y;
-                        double chance = spiceFieldMaxChance * spiceFactor
-                                * (1.0 - (double) depthBelow / spiceFieldDepth);
-                        long blockSeed = colSeed ^ ((long) y * 0x6C62272E07BB0142L);
-                        if (new Random(blockSeed).nextDouble() < chance) {
-                            chunk.setBlock(x, y, z, Material.SAND); // white sand
+                int cellX = Math.floorDiv(worldX, rockCellSize);
+                int cellZ = Math.floorDiv(worldZ, rockCellSize);
+                if (cellX != lastCellX || cellZ != lastCellZ) {
+                    lastIsBeacon = rockField.isUplinkBeaconCell(cellX, cellZ);
+                    lastCellX = cellX;
+                    lastCellZ = cellZ;
+                }
+
+                if (lastIsBeacon) {
+                    int cellCenterX = cellX * rockCellSize + rockCellSize / 2;
+                    int cellCenterZ = cellZ * rockCellSize + rockCellSize / 2;
+                    if (worldX == cellCenterX && worldZ == cellCenterZ && beaconBlocks != null) {
+                        StructurePlacer.place(chunk, chunkX, chunkZ, worldX, surface + 1, worldZ, beaconBlocks);
+                    }
+                } else {
+                    double spiceFactor = rockField.getSpiceFieldFactor(worldX, worldZ, spiceFieldRadius);
+                    if (spiceFactor > 0) {
+                        long colSeed = cachedSeed ^ ((long) worldX * 0xB5EE8E3FL) ^ ((long) worldZ * 0xC7537B51L);
+                        int bottom = Math.max(1, surface - spiceFieldDepth + 1);
+                        for (int y = surface; y >= bottom; y--) {
+                            int depthBelow = surface - y;
+                            double chance = spiceFieldMaxChance * spiceFactor
+                                    * (1.0 - (double) depthBelow / spiceFieldDepth);
+                            long blockSeed = colSeed ^ ((long) y * 0x6C62272E07BB0142L);
+                            if (new Random(blockSeed).nextDouble() < chance) {
+                                chunk.setBlock(x, y, z, Material.SAND);
+                            }
                         }
                     }
                 }

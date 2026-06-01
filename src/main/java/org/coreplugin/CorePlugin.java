@@ -20,6 +20,7 @@ public final class CorePlugin extends JavaPlugin {
     @Override
     public void onLoad() {
         saveDefaultConfig();
+        saveResource("structures/uplink_beacon.json", false);
     }
 
     @Override
@@ -40,8 +41,9 @@ public final class CorePlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new JungleTreeListener(glowstoneChance), this);
         HostileMobTask.register(this, sandstorm);
         OreCaveDamageTask.register(this);
-        SpeedBootsTask.register(this);
+        CustomItemsTask.register(this);
         getServer().getPluginManager().registerEvents(new PhaseDeviceListener(this), this);
+        getServer().getPluginManager().registerEvents(new UplinkBeaconListener(this), this);
         DarknessListener.register(this);
         getCommand("sandstorm").setExecutor(new SandstormCommand(sandstorm));
         getServer().getPluginManager().registerEvents(new Listener() {

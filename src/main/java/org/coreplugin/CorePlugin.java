@@ -48,7 +48,7 @@ public final class CorePlugin extends JavaPlugin {
         OreCaveDamageTask.register(this);
         CustomItemsTask.register(this);
         getServer().getPluginManager().registerEvents(new PhaseDeviceListener(this), this);
-        getServer().getPluginManager().registerEvents(new UplinkBeaconListener(), this);
+        getServer().getPluginManager().registerEvents(new UplinkBeaconListener(this), this);
         getServer().getPluginManager().registerEvents(new UplinkDestinationListener(this), this);
         DarknessListener.register(this);
         getCommand("sandstorm").setExecutor(new SandstormCommand(sandstorm));

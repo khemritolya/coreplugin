@@ -18,21 +18,25 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 
 public class UplinkBeaconListener implements Listener {
 
     private static final String GUARDIAN_NAME = ChatColor.DARK_RED + "Uplink Guardian";
 
-    // Maps beacon center "x,z" → UUID of the currently living guardian
     private final Map<String, UUID> activeGuardians = new HashMap<>();
+    private final Random rng = new Random();
+    private final Plugin plugin;
 
-    public UplinkBeaconListener() {
+    public UplinkBeaconListener(Plugin plugin) {
+        this.plugin = plugin;
     }
 
     @EventHandler
@@ -62,13 +66,23 @@ public class UplinkBeaconListener implements Listener {
         if (hand.getAmount() > 1) hand.setAmount(hand.getAmount() - 1);
         else e.getPlayer().setItemInHand(null);
 
-        spawnGuardian(block, key);
+        Player player = e.getPlayer();
+        player.sendMessage(ChatColor.YELLOW + "<hyperbridge> Verifying Access Restriction...");
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            player.sendMessage(ChatColor.YELLOW + "<hyperbridge> Access: " + ChatColor.RED + "FAILURE" + ChatColor.YELLOW + ". Deploying Uplink Guardian...");
+            spawnGuardian(block, key);
+        }, 100L);
     }
 
     private void spawnGuardian(Block block, String key) {
         World world = block.getWorld();
         int topY = findTowerTop(block);
-        Location loc = new Location(world, block.getX() + 0.5, topY, block.getZ() + 0.5);
+        double angle = rng.nextDouble() * 2 * Math.PI;
+        double dist = 2 + rng.nextDouble() * 5;
+        Location loc = new Location(world,
+                block.getX() + 0.5 + dist * Math.cos(angle),
+                topY,
+                block.getZ() + 0.5 + dist * Math.sin(angle));
 
         Zombie zombie = (Zombie) world.spawnEntity(loc, EntityType.ZOMBIE);
 
@@ -84,6 +98,7 @@ public class UplinkBeaconListener implements Listener {
         eq.setHelmet(new ItemStack(Material.SKULL_ITEM, 1, (short) 1)); // wither skeleton skull
         eq.setChestplate(CustomItems.loadDiamondoidChestplate());
         eq.setLeggings(CustomItems.loadDiamondoidLeggings());
+        eq.setBoots(CustomItems.loadDiamondoidBoots());
         eq.setItemInHand(CustomItems.loadDiamondoidSword());
         eq.setHelmetDropChance(0f);
         eq.setChestplateDropChance(0f);
@@ -139,6 +154,7 @@ public class UplinkBeaconListener implements Listener {
         e.getDrops().add(CustomItems.loadUplinkGuardianHead());
         e.getDrops().add(CustomItems.loadDiamondoidChestplate());
         e.getDrops().add(CustomItems.loadDiamondoidLeggings());
+        e.getDrops().add(CustomItems.loadDiamondoidBoots());
         e.getDrops().add(CustomItems.loadDiamondoidSword());
         e.getDrops().add(CustomItems.loadUplinkBeaconDrop());
         e.setDroppedExp(0);

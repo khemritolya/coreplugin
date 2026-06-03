@@ -5,6 +5,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.FireworkEffect;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
@@ -38,6 +39,7 @@ public class PhaseDeviceListener implements Listener {
 
         Player player = event.getPlayer();
         if (player.getGameMode() != GameMode.SURVIVAL) return;
+        if (player.getWorld().getEnvironment() == World.Environment.THE_END) return;
 
         ItemStack item = player.getItemInHand();
         if (item == null) return;

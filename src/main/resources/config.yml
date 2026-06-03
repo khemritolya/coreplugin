@@ -86,7 +86,7 @@ world-gen:
       clay-radius: 0.5
       decoration-density: 0.5
       cache-chance: 0.9999
-      cache-rare-max: 15
+      cache-rare-max: 3
       cache-rare-fill-chance: 0.9
       cache-common-max: 7
       cache-common-fill-chance: 0.9
@@ -96,11 +96,11 @@ world-gen:
         monomolecular-blade: 1.0
         imperial-tachi: 2.0
         speed-boots: 1.0
-        nacre: 0.0
+        nacre: 3.0
         plasma-charge: 1.0
         phase-device: 1.0
         nano-crystal: 1.0
-        uplink-card: 10.0
+        uplink-card: 1.0
       cache-common-item-weights:
         cookies: 2.0
         name-tag: 0.5

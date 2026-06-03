@@ -22,7 +22,16 @@ public class AnvilListener implements Listener {
             CustomItems.SPEED_BOOTS_NAME,
             CustomItems.PLASMA_CHARGE_NAME,
             CustomItems.IMPERIAL_TACHI_NAME,
-            CustomItems.PHASE_DEVICE_NAME
+            CustomItems.PHASE_DEVICE_NAME,
+            CustomItems.NANO_CRYSTAL_NAME,
+            CustomItems.UPLINK_CARD_NAME,
+            CustomItems.DIAMONDOID_CHESTPLATE_NAME,
+            CustomItems.DIAMONDOID_LEGGINGS_NAME,
+            CustomItems.DIAMONDOID_BOOTS_NAME,
+            CustomItems.DIAMONDOID_SWORD_NAME,
+            CustomItems.UPLINK_BEACON_DROP_NAME,
+            CustomItems.UPLINK_GUARDIAN_HEAD_NAME,
+            CustomItems.SPICE_NAME
     ));
 
     @EventHandler

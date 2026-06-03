@@ -77,4 +77,4 @@ Ulrichson Jannik
 \DARK_GRAYSUBJECT:\BLACK Read This!
 \DARK_GRAYFROM: \RED\MAGICAAAAAAAAA
 
-\RESET\BLACKHey friend, don't give up hope! God is with the generation of the righteous! We've been able to get access to an old hyperbridge generator. If you can get access to a beacon, we can get you offworld. Hyperbridge Key: \YELLOWQE374MN
+\RESET\BLACKHey friend, don't give up hope! God is with the generation of the righteous! We've been able to get access to an old hyperbridge generator. If you can get access to a beacon, we can get you offworld. Address: \GREENQE374MN

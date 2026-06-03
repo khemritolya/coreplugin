@@ -12,6 +12,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -140,6 +141,14 @@ public class UplinkDestinationListener implements Listener {
     }
 
     @EventHandler
+    public void onEndDamage(EntityDamageByEntityEvent e) {
+        World end = plugin.getEndWorld();
+        if (end == null || !e.getEntity().getWorld().equals(end)) return;
+        if (e.getDamager() instanceof Player && ((Player) e.getDamager()).getGameMode() == GameMode.CREATIVE) return;
+        if (e.getDamager() instanceof Player) e.setCancelled(true);
+    }
+
+    @EventHandler
     public void onEndBlockBreak(BlockBreakEvent e) {
         World end = plugin.getEndWorld();
         if (end == null || !e.getPlayer().getWorld().equals(end)) return;
@@ -156,7 +165,7 @@ public class UplinkDestinationListener implements Listener {
         }
     }
 
-    private static final String ILSAN_NAME = "Ilsan David";
+    private static final String ILSAN_NAME = "Ilsan Melchizedek";
 
     private void ensureIlsanPresent(World end, Location dest) {
         for (Villager v : end.getEntitiesByClass(Villager.class)) {

@@ -48,6 +48,7 @@ public class CustomItems {
     public static final String UPLINK_CARD_NAME           = ChatColor.RESET + "" + ChatColor.YELLOW + "Uplink Card";
     public static final String DIAMONDOID_CHESTPLATE_NAME  = ChatColor.RESET + "" + ChatColor.AQUA + "Diamondoid Chestplate";
     public static final String DIAMONDOID_LEGGINGS_NAME    = ChatColor.RESET + "" + ChatColor.AQUA + "Diamondoid Leggings";
+    public static final String DIAMONDOID_BOOTS_NAME       = ChatColor.RESET + "" + ChatColor.AQUA + "Diamondoid Boots";
     public static final String DIAMONDOID_SWORD_NAME       = ChatColor.RESET + "" + ChatColor.AQUA + "Diamondoid Sword";
     public static final String UPLINK_BEACON_DROP_NAME    = ChatColor.RESET + "" + ChatColor.YELLOW + "Hyperbridge Beacon";
 
@@ -471,6 +472,23 @@ public class CustomItems {
         return CraftItemStack.asBukkitCopy(nmsStack);
     }
 
+    public static ItemStack loadDiamondoidBoots() {
+        ItemStack boots = new ItemStack(Material.DIAMOND_BOOTS);
+        ItemMeta meta = boots.getItemMeta();
+        meta.setDisplayName(DIAMONDOID_BOOTS_NAME);
+        meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by Amakuni Concern",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "The Ash of the Samurai Beats",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Strong within Imperial Hearts"));
+        boots.setItemMeta(meta);
+        boots.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
+
+        net.minecraft.server.v1_8_R3.ItemStack nmsStack = CraftItemStack.asNMSCopy(boots);
+        NBTTagCompound tag = nmsStack.hasTag() ? nmsStack.getTag() : new NBTTagCompound();
+        tag.setByte("Unbreakable", (byte) 1);
+        nmsStack.setTag(tag);
+        return CraftItemStack.asBukkitCopy(nmsStack);
+    }
+
     public static ItemStack loadUplinkGuardianHead() {
         ItemStack skull = new ItemStack(Material.SKULL_ITEM, 1, (short) 1);
         ItemMeta meta = skull.getItemMeta();
@@ -493,6 +511,7 @@ public class CustomItems {
         kbRes.setString("Slot", "head");
         modifiers.add(kbRes);
         tag.set("AttributeModifiers", modifiers);
+        tag.setString("UplinkGuardianHeadId", java.util.UUID.randomUUID().toString());
         nmsStack.setTag(tag);
         return CraftItemStack.asBukkitCopy(nmsStack);
     }

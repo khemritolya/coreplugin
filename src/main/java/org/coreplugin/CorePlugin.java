@@ -1,12 +1,17 @@
 package org.coreplugin;
 
+import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.WorldCreator;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.coreplugin.worldgen.DesertWorldGenerator;
+import org.coreplugin.worldgen.EndWorldGenerator;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -16,11 +21,11 @@ public final class CorePlugin extends JavaPlugin {
     DesertWorldGenerator generator;
     private final Set<String> generatorWorldNames = new HashSet<>();
     private SandstormManager sandstorm;
+    private World endWorld;
 
     @Override
     public void onLoad() {
         saveDefaultConfig();
-        saveResource("structures/uplink_beacon.json", false);
     }
 
     @Override
@@ -43,12 +48,30 @@ public final class CorePlugin extends JavaPlugin {
         OreCaveDamageTask.register(this);
         CustomItemsTask.register(this);
         getServer().getPluginManager().registerEvents(new PhaseDeviceListener(this), this);
-        getServer().getPluginManager().registerEvents(new UplinkBeaconListener(this), this);
+        getServer().getPluginManager().registerEvents(new UplinkBeaconListener(), this);
+        getServer().getPluginManager().registerEvents(new UplinkDestinationListener(this), this);
         DarknessListener.register(this);
         getCommand("sandstorm").setExecutor(new SandstormCommand(sandstorm));
+
+        getServer().getScheduler().runTask(this, () -> {
+            endWorld = new WorldCreator("game_end")
+                    .environment(World.Environment.THE_END)
+                    .generator(new EndWorldGenerator())
+                    .generateStructures(false)
+                    .createWorld();
+        });
         getServer().getPluginManager().registerEvents(new Listener() {
             @EventHandler
             public void onExplode(EntityExplodeEvent e) { e.setYield(1.0f); }
+            @EventHandler
+            public void onDoorClick(PlayerInteractEvent e) {
+                if (e.getAction() == Action.RIGHT_CLICK_BLOCK
+                        && e.getClickedBlock().getType() == Material.WOODEN_DOOR
+                        && endWorld != null
+                        && e.getPlayer().getWorld().equals(endWorld)) {
+                    e.setCancelled(true);
+                }
+            }
         }, this);
 
         // Main world is already loaded before onEnable on CraftBukkit 1.8;
@@ -86,5 +109,9 @@ public final class CorePlugin extends JavaPlugin {
 
     public DesertWorldGenerator getGenerator() {
         return generator;
+    }
+
+    public World getEndWorld() {
+        return endWorld;
     }
 }

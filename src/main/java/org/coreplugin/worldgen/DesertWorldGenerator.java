@@ -18,9 +18,6 @@ import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.material.MaterialData;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
-import java.io.IOException;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -114,7 +111,6 @@ public class DesertWorldGenerator extends ChunkGenerator {
 
     // Uplink beacons
     private final double uplinkBeaconChance;
-    private List<StructurePlacer.BlockDef> beaconBlocks;
 
     // Ore cave interior
     private final double[] oreDensities;
@@ -234,17 +230,6 @@ public class DesertWorldGenerator extends ChunkGenerator {
 
         ConfigurationSection uplinkCfg = cfg.getConfigurationSection("uplink-beacon");
         uplinkBeaconChance = uplinkCfg != null ? uplinkCfg.getDouble("spawn-chance", 0.10) : 0.10;
-
-        File beaconFile = new File(plugin.getDataFolder(), "structures/uplink_beacon.json");
-        if (beaconFile.exists()) {
-            try {
-                beaconBlocks = StructurePlacer.load(beaconFile);
-            } catch (IOException e) {
-                plugin.getLogger().warning("Could not load uplink_beacon.json: " + e.getMessage());
-            }
-        } else {
-            plugin.getLogger().warning("structures/uplink_beacon.json not found — uplink beacons disabled.");
-        }
 
         ConfigurationSection oreCaveCfg = rockCfg.getConfigurationSection("ore-cave");
         ConfigurationSection densitiesCfg = oreCaveCfg.getConfigurationSection("densities");
@@ -393,8 +378,10 @@ public class DesertWorldGenerator extends ChunkGenerator {
                 if (lastIsBeacon) {
                     int cellCenterX = cellX * rockCellSize + rockCellSize / 2;
                     int cellCenterZ = cellZ * rockCellSize + rockCellSize / 2;
-                    if (worldX == cellCenterX && worldZ == cellCenterZ && beaconBlocks != null) {
-                        StructurePlacer.place(chunk, chunkX, chunkZ, worldX, surface + 1, worldZ, beaconBlocks);
+                    if (worldX == cellCenterX && worldZ == cellCenterZ) {
+                        for (int dy = 0; dy < 20; dy++) {
+                            chunk.setBlock(x, surface + 1 + dy, z, Material.OBSIDIAN);
+                        }
                     }
                 } else {
                     double spiceFactor = rockField.getSpiceFieldFactor(worldX, worldZ, spiceFieldRadius);

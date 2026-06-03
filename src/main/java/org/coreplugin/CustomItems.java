@@ -46,8 +46,12 @@ public class CustomItems {
     public static final String PLASMA_CHARGE_NAME         = ChatColor.RESET + "" + ChatColor.AQUA + "Plasma Charge";
 
     public static final String UPLINK_CARD_NAME           = ChatColor.RESET + "" + ChatColor.YELLOW + "Uplink Card";
-    public static final String DIAMONDOID_CHESTPLATE_NAME = ChatColor.RESET + "" + ChatColor.AQUA + "Diamondoid Chestplate";
-    public static final String UPLINK_BEACON_DROP_NAME    = ChatColor.RESET + "" + ChatColor.GOLD + "Uplink Beacon";
+    public static final String DIAMONDOID_CHESTPLATE_NAME  = ChatColor.RESET + "" + ChatColor.AQUA + "Diamondoid Chestplate";
+    public static final String DIAMONDOID_LEGGINGS_NAME    = ChatColor.RESET + "" + ChatColor.AQUA + "Diamondoid Leggings";
+    public static final String DIAMONDOID_SWORD_NAME       = ChatColor.RESET + "" + ChatColor.AQUA + "Diamondoid Sword";
+    public static final String UPLINK_BEACON_DROP_NAME    = ChatColor.RESET + "" + ChatColor.YELLOW + "Hyperbridge Beacon";
+
+    public static final String UPLINK_GUARDIAN_HEAD_NAME = ChatColor.RESET + "" + ChatColor.DARK_RED + "Uplink Guardian Head";
 
     public static ItemStack loadSpice(int mark, int duration) {
         ItemStack potion = new ItemStack(Material.POTION);
@@ -394,7 +398,7 @@ public class CustomItems {
         ItemStack bed = new ItemStack(Material.BED);
         ItemMeta meta = bed.getItemMeta();
         meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by New Fuji Co. Ltd.",
-                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Click to set Spawn"));
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Click to Set Spawn"));
         bed.setItemMeta(meta);
         return bed;
     }
@@ -404,12 +408,14 @@ public class CustomItems {
         ItemMeta meta = paper.getItemMeta();
         meta.setDisplayName(UPLINK_CARD_NAME);
         meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by New Fuji Co. Ltd.",
-                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Click on an Obsidian Uplink Beacon to Activate"));
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Click on an Obsidian",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Uplink Beacon to Activate"));
         paper.setItemMeta(meta);
 
         net.minecraft.server.v1_8_R3.ItemStack nmsStack = CraftItemStack.asNMSCopy(paper);
         NBTTagCompound tag = nmsStack.hasTag() ? nmsStack.getTag() : new NBTTagCompound();
         tag.setByte("UplinkCard", (byte) 1);
+        tag.setString("UplinkCardId", java.util.UUID.randomUUID().toString());
         nmsStack.setTag(tag);
         return CraftItemStack.asBukkitCopy(nmsStack);
     }
@@ -419,7 +425,8 @@ public class CustomItems {
         ItemMeta meta = chest.getItemMeta();
         meta.setDisplayName(DIAMONDOID_CHESTPLATE_NAME);
         meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by Amakuni Concern",
-                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Forged from a Single Molecule"));
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "The Ash of the Samurai Beats",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Strong within Imperial Hearts"));
         chest.setItemMeta(meta);
         chest.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
 
@@ -430,13 +437,73 @@ public class CustomItems {
         return CraftItemStack.asBukkitCopy(nmsStack);
     }
 
+    public static ItemStack loadDiamondoidSword() {
+        ItemStack sword = new ItemStack(Material.DIAMOND_SWORD);
+        ItemMeta meta = sword.getItemMeta();
+        meta.setDisplayName(DIAMONDOID_SWORD_NAME);
+        meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by Amakuni Concern",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "The Ash of the Samurai Beats",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Strong within Imperial Hearts"));
+        sword.setItemMeta(meta);
+        sword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
+
+        net.minecraft.server.v1_8_R3.ItemStack nmsStack = CraftItemStack.asNMSCopy(sword);
+        NBTTagCompound tag = nmsStack.hasTag() ? nmsStack.getTag() : new NBTTagCompound();
+        tag.setByte("Unbreakable", (byte) 1);
+        nmsStack.setTag(tag);
+        return CraftItemStack.asBukkitCopy(nmsStack);
+    }
+
+    public static ItemStack loadDiamondoidLeggings() {
+        ItemStack legs = new ItemStack(Material.DIAMOND_LEGGINGS);
+        ItemMeta meta = legs.getItemMeta();
+        meta.setDisplayName(DIAMONDOID_LEGGINGS_NAME);
+        meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by Amakuni Concern",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "The Ash of the Samurai Beats",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Strong within Imperial Hearts"));
+        legs.setItemMeta(meta);
+        legs.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
+
+        net.minecraft.server.v1_8_R3.ItemStack nmsStack = CraftItemStack.asNMSCopy(legs);
+        NBTTagCompound tag = nmsStack.hasTag() ? nmsStack.getTag() : new NBTTagCompound();
+        tag.setByte("Unbreakable", (byte) 1);
+        nmsStack.setTag(tag);
+        return CraftItemStack.asBukkitCopy(nmsStack);
+    }
+
+    public static ItemStack loadUplinkGuardianHead() {
+        ItemStack skull = new ItemStack(Material.SKULL_ITEM, 1, (short) 1);
+        ItemMeta meta = skull.getItemMeta();
+        meta.setDisplayName(UPLINK_GUARDIAN_HEAD_NAME);
+        meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by New Fuji Co. Ltd.",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "System Error: " + ChatColor.RED + ChatColor.MAGIC + "AAAAA",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Gives Immunity to Knockback"));
+        skull.setItemMeta(meta);
+
+        net.minecraft.server.v1_8_R3.ItemStack nmsStack = CraftItemStack.asNMSCopy(skull);
+        NBTTagCompound tag = nmsStack.hasTag() ? nmsStack.getTag() : new NBTTagCompound();
+        NBTTagList modifiers = new NBTTagList();
+        NBTTagCompound kbRes = new NBTTagCompound();
+        kbRes.setString("AttributeName", "generic.knockbackResistance");
+        kbRes.setString("Name", "generic.knockbackResistance");
+        kbRes.setDouble("Amount", 1.0);
+        kbRes.setInt("Operation", 0);
+        kbRes.setLong("UUIDMost", 0x4B6F636B42616B21L);
+        kbRes.setLong("UUIDLeast", 0x4865616448656164L);
+        kbRes.setString("Slot", "head");
+        modifiers.add(kbRes);
+        tag.set("AttributeModifiers", modifiers);
+        nmsStack.setTag(tag);
+        return CraftItemStack.asBukkitCopy(nmsStack);
+    }
+
     public static ItemStack loadUplinkBeaconDrop() {
         ItemStack star = new ItemStack(Material.NETHER_STAR);
         ItemMeta meta = star.getItemMeta();
         meta.setDisplayName(UPLINK_BEACON_DROP_NAME);
         meta.setLore(Arrays.asList(ChatColor.RESET + "" + ChatColor.GRAY + "by New Fuji Co. Ltd.",
-                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Click to Escape " + ChatColor.GREEN + "HD 31174 c",
-                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Range: " + ChatColor.YELLOW + "10m"));
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Range: " + ChatColor.YELLOW + "10m",
+                ChatColor.RESET + "" + ChatColor.DARK_GRAY + "Destination: " + ChatColor.RED + "Unknown"));
         star.setItemMeta(meta);
         return star;
     }

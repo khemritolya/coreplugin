@@ -7,6 +7,8 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_8_R3.entity.CraftLivingEntity;
+import net.minecraft.server.v1_8_R3.GenericAttributes;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -16,7 +18,8 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
-import org.coreplugin.worldgen.DesertWorldGenerator;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,14 +27,12 @@ import java.util.UUID;
 
 public class UplinkBeaconListener implements Listener {
 
-    private static final String GUARDIAN_NAME = ChatColor.RED + "Uplink Guardian";
+    private static final String GUARDIAN_NAME = ChatColor.DARK_RED + "Uplink Guardian";
 
-    private final CorePlugin plugin;
     // Maps beacon center "x,z" → UUID of the currently living guardian
     private final Map<String, UUID> activeGuardians = new HashMap<>();
 
-    public UplinkBeaconListener(CorePlugin plugin) {
-        this.plugin = plugin;
+    public UplinkBeaconListener() {
     }
 
     @EventHandler
@@ -43,10 +44,6 @@ public class UplinkBeaconListener implements Listener {
 
         Block block = e.getClickedBlock();
         if (block == null || block.getType() != Material.OBSIDIAN) return;
-
-        DesertWorldGenerator gen = plugin.getGenerator();
-        if (gen == null) return;
-        if (!gen.isUplinkBeaconAt(block.getWorld().getSeed(), block.getX(), block.getZ())) return;
 
         e.setCancelled(true);
 
@@ -60,6 +57,10 @@ public class UplinkBeaconListener implements Listener {
             // Guardian is gone — clear stale entry so we can respawn
             activeGuardians.remove(key);
         }
+
+        ItemStack hand = e.getPlayer().getItemInHand();
+        if (hand.getAmount() > 1) hand.setAmount(hand.getAmount() - 1);
+        else e.getPlayer().setItemInHand(null);
 
         spawnGuardian(block, key);
     }
@@ -76,15 +77,23 @@ public class UplinkBeaconListener implements Listener {
         zombie.setBaby(false);
         zombie.setCanPickupItems(false);
         zombie.setRemoveWhenFarAway(false);
+        zombie.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, Integer.MAX_VALUE, 2, false, false), true);
+        zombie.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 3, false, false), true);
 
         EntityEquipment eq = zombie.getEquipment();
         eq.setHelmet(new ItemStack(Material.SKULL_ITEM, 1, (short) 1)); // wither skeleton skull
         eq.setChestplate(CustomItems.loadDiamondoidChestplate());
+        eq.setLeggings(CustomItems.loadDiamondoidLeggings());
+        eq.setItemInHand(CustomItems.loadDiamondoidSword());
         eq.setHelmetDropChance(0f);
-        eq.setChestplateDropChance(1f);
+        eq.setChestplateDropChance(0f);
         eq.setLeggingsDropChance(0f);
         eq.setBootsDropChance(0f);
         eq.setItemInHandDropChance(0f);
+
+        ((CraftLivingEntity) zombie).getHandle()
+                .getAttributeInstance(GenericAttributes.c)
+                .setValue(1.0);
 
         activeGuardians.put(key, zombie.getUniqueId());
     }
@@ -127,6 +136,10 @@ public class UplinkBeaconListener implements Listener {
 
         activeGuardians.remove(key);
         e.getDrops().clear();
+        e.getDrops().add(CustomItems.loadUplinkGuardianHead());
+        e.getDrops().add(CustomItems.loadDiamondoidChestplate());
+        e.getDrops().add(CustomItems.loadDiamondoidLeggings());
+        e.getDrops().add(CustomItems.loadDiamondoidSword());
         e.getDrops().add(CustomItems.loadUplinkBeaconDrop());
         e.setDroppedExp(0);
     }

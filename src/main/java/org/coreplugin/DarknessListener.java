@@ -36,6 +36,8 @@ public class DarknessListener extends BukkitRunnable {
     // Mirrors vanilla's time-of-day sky-light darkening so that outdoor players
     // at night are treated as being in darkness.
     private static int effectiveLightAt(Block block, org.bukkit.World world) {
+        int y = block.getY();
+        if (y < 0 || y > 255) return 15;
         int blockLight = block.getLightFromBlocks();
         int skyLight   = block.getLightFromSky();
         int reduction  = skyLightReduction(world.getTime());

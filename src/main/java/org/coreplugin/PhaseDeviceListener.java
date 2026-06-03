@@ -89,8 +89,7 @@ public class PhaseDeviceListener implements Listener {
         }.runTaskLater(plugin, durationTicks + 1L);
     }
 
-    private void spawnExplosion(Location loc) {
-        loc.getWorld().createExplosion(loc.getX(), loc.getY(), loc.getZ(), 3.0f, false, false);
+    public static void spawnExplosion(Location loc) {
         Firework fw = loc.getWorld().spawn(loc, Firework.class);
         FireworkMeta fwMeta = fw.getFireworkMeta();
         fwMeta.addEffect(FireworkEffect.builder()
